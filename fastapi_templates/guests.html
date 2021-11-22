@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block body %}
+	<div class="row" style="margin:20px;padding:20px">
+		<div class="col-1">
+		</div>
+		<div class="col">
+			<div id="guests">
+				<button type="button" class="btn btn-primary" v-on:click="next">Next</button>
+				<button type="button" class="btn btn-secondary" v-on:click="prev">Prev</button>
+				<ul class="list-group" v-for="guest in items">
+					<li class="list-group-item d-flex justify-content-between align-items-start">
+						<div class="ms-2 me-auto">
+							<div class="fw-bold">[[guest.username]]</div>
+							"[[guest.stripe_id]]"
+						</div>
+						<span v-if="!guest.stripe_id" class="badge bg-primary rounded-pill">
+						<span v-if="guest.type">[[guest.type]]</span>
+						<span v-if="!guest.type">user</span>
+					</span>
+						<span v-if="guest.stripe_id" class="badge bg-danger rounded-pill">
+						<span v-if="guest.type">[[guest.type]]</span>
+						<span v-if="!guest.type">user</span>
+					</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="col-1">
+
+		</div>
+	</div>
+{% endblock %}
+{% block trailing %}
+<script>
+	new Vue({
+		el: "#guests",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				protocol: "http:",
+				host: "localhost:5000",
+				items: [],
+				key: "",
+				limit: 20,
+				skip: 0
+			}
+		},
+		methods: {
+			next: function (event) {
+				this.skip += this.limit;
+				axios.get(this.protocol + '//' + this.host + '/api/guest?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+					.then((response) => {
+						this.items = response.data;
+					});
+			},
+			prev: function (event) {
+				this.skip -= this.limit;
+				axios.get(this.protocol + '//' + this.host + '/api/guest?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+					.then((response) => {
+						this.items = response.data;
+					});
+			}
+		},
+		mounted() {
+			this.key = "key";
+			this.skip = 0;
+			axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+				.then((response) => {
+					this.items = response.data;
+				});
+		}
+	})
+</script>
+{% endblock %}

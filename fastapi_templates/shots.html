@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block body %}
+	<div class="row" style="margin:20px;padding:20px">
+		<div class="col-1">
+		</div>
+		<div class="col">
+			<table class="table">
+				<thead>
+				<tr>
+					{% for column in columns %}
+					<th scope="col">{{column}}</th>
+					{% endfor %}
+				</tr>
+				</thead>
+				<tbody>
+				{% for shot in shots %}
+					<tr>
+						{% for column in columns %}
+						<td>{{shot[column]}}</td>
+						{% endfor %}
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		<div class="col-1">
+		</div>
+	</div>
+{% endblock %}
+{% block trailing %}
+{% endblock %}

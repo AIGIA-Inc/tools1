@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row" style="margin:20px;padding:20px">
+	<div class="col-1">
+	</div>
+	<div class="col">
+		<div id="accounts">
+			<button type="button" class="btn btn-primary" v-on:click="next">Next</button>
+			<button type="button" class="btn btn-secondary" v-on:click="prev">Prev</button>
+			<table class="table">
+				<thead>
+				<tr>
+					<th scope="col">企業名</th>
+					<th scope="col">所属スタジオ名</th>
+					<th scope="col">ニックネーム</th>
+					<th scope="col">メールアドレス</th>
+					<th scope="col">タイプ</th>
+					<th scope="col">課金・非課金</th>
+					<th scope="col">入会日</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr v-for="account in items">
+					<td>[[account.company]]</td>
+					<td>[[account.studio]]</td>
+					<td>[[account.user]]</td>
+					<td>[[account.username]]</td>
+					<td>[[account.type]]</td>
+					<td>[[account.subscribe]]</td>
+					<td>[[account.date]]</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div class="col-1">
+	</div>
+</div>
+{% endblock %}
+{% block trailing %}
+<script>
+	new Vue({
+		el: "#accounts",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				protocol: "http:",
+				host: "localhost:5000",
+				items: [],
+				key: "",
+				limit: 20,
+				skip: 0
+			}
+		},
+		methods: {
+			next: function (event) {
+				this.skip += this.limit;
+				axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+					.then((response) => {
+						this.items = response.data;
+					});
+			},
+			prev: function (event) {
+				this.skip -= this.limit;
+				axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+					.then((response) => {
+						this.items = response.data;
+					});
+			}
+		},
+		mounted() {
+			this.key = "key";
+			this.skip = 0;
+			axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+				.then((response) => {
+					this.items = response.data;
+				}).catch((e) => {
+			       console.log(e);
+                })
+		}
+	})
+</script>
+{% endblock %}

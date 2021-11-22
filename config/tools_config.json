@@ -1,0 +1,12 @@
+{
+	"host": "localhost",
+	"path": "",
+	"key": "key",
+	"username": "",
+	"password": "",
+	"stripe": {
+		"protocol": "http",
+		"host": "localhost:3000",
+		"key": ""
+	}
+}

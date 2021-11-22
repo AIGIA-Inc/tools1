@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row" style="margin:20px;padding:20px">
+	<div class="col-1">
+	</div>
+	<div class="col">
+		<div id="totallings">
+			<ul class="list-group">
+				<li class="list-group-item" v-for="item in items">
+					<a v-bind:href="'http://localhost:5000/totalling?key=' + key + '&studio=' + item.username">[[item.nickname]]</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div class="col-1">
+	</div>
+</div>
+{% endblock %}
+{% block trailing %}
+<script>
+	new Vue({
+		el: "#totallings",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				items: []
+			}
+		},
+		methods: {},
+		mounted() {
+			var key = "key";
+			axios.get('http://localhost:5000/usernames?key=' + key + '&type=studio')
+				.then((response) => {
+					this.items = response.data;
+					this.key = key;
+				});
+		}
+	})
+</script>
+{% endblock %}

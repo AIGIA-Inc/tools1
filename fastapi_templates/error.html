@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body %}
+	<div class="row" style="margin:20px;padding:20px">
+		<h1>Error : {{error['status_code']}}</h1>
+		<h2>{{error['detail']}}</h2>
+	</div>
+{% endblock %}
+{% block trailing %}
+{% endblock %}

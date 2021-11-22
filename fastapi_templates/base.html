@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>AIG Report</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+		  integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
+		crossorigin="anonymous"></script>
+<div id="app" class="container-fluid" style="padding:0">
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="#">AIG Report  {{host}}</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+					aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<li class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav">
+					<li class="nav-item">
+						<a class="nav-link" href="{{path}}/?key={{key}}">Graph</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="{{path}}/accounts?key={{key}}">Accounts</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="{{path}}/totallings?key={{key}}">Totalling</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="{{path}}/guest?key={{key}}">Guests</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="{{path}}/shots?key={{key}}">Shots</a>
+					</li>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink0" role="button"
+						   data-bs-toggle="dropdown" aria-expanded="false">
+							Download...
+						</a>
+						<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink0">
+							<!--	<li><a class="dropdown-item" href="{{path}}/download/tree?key={{key}}&root={{rootuser}}">tree</a></li> -->
+							<li><a class="dropdown-item" href="{{path}}/download/accounts?key={{key}}">accounts</a></li>
+							<!--<li><a class="dropdown-item" href="{{path}}/download/guest?key={{key}}&root={{rootuser}}">guests</a></li>
+							<li><a class="dropdown-item" href="{{path}}/download/validation?key={{key}}&root={{rootuser}}">validation</a></li> -->
+							<li><a class="dropdown-item" href="{{path}}/download/graph?key={{key}}&root={{rootuser}}">graph</a></li>
+							<!--	<li><a class="dropdown-item" href="{{path}}/download/shots?key={{key}}">shots</a></li> -->
+						</ul>
+					</li>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink1" role="button"
+						   data-bs-toggle="dropdown" aria-expanded="false">
+							Layout...
+						</a>
+						<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
+							<li><a class="dropdown-item" href="{{path}}?key={{key}}&root={{rootuser}}&layout=circo">cicle</a></li>
+							<li><a class="dropdown-item" href="{{path}}?key={{key}}&root={{rootuser}}&layout=dot">tree</a></li>
+							<li><a class="dropdown-item" href="{{path}}?key={{key}}&root={{rootuser}}&layout=fdp">fdp</a></li>
+							<li><a class="dropdown-item" href="{{path}}?key={{key}}&root={{rootuser}}&layout=neato">neato</a></li>
+							<li><a class="dropdown-item" href="{{path}}?key={{key}}&root={{rootuser}}&layout=sfdp">sfdp</a></li>
+							<li><a class="dropdown-item" href="{{path}}?key={{key}}&root={{rootuser}}&layout=twopi">twopi</a></li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+		</div>
+	</nav>
+	{% block body %}
+	{% endblock %}
+</div>
+{% block trailing %}
+{% endblock %}
+</body>
+</html>

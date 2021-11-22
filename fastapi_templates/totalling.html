@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+	<div class="row" style="margin:20px;padding:20px">
+		<div class="col-1">
+		</div>
+		<div class="col">
+			<div id="totalling">
+				<div id="studio_name" style="visibility: hidden;">{{studio}}</div>
+				<table class="table">
+					<thead>
+					<tr>
+						<th scope="col">スタジオ名</th>
+						<th scope="col">カウント</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<td>[[item.studio]]</td>
+						<td>[[item.count]]</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="col-1">
+		</div>
+	</div>
+{% endblock %}
+{% block trailing %}
+<script>
+	const studio_name = document.getElementById("studio_name").innerHTML;
+	new Vue({
+		el: "#totalling",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				protocol: "http:",
+				host: "localhost:5000",
+				item: {studio:'', count: 0},
+				key: "",
+				studio: studio_name
+			}
+		},
+		methods: {
+		},
+		mounted() {
+			this.key = "key";
+			axios.get(this.protocol + '//' + this.host + '/api/totalling?key=' + this.key + "&studio=" + this.studio)
+				.then((response) => {
+					this.item = response.data;
+				});
+		}
+	})
+</script>
+{% endblock %}
