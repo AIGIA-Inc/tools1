@@ -55,28 +55,27 @@
 		methods: {
 			next: function (event) {
 				this.skip += this.limit;
-				axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
-					.then((response) => {
-						this.items = response.data;
-					});
+                this.get();
 			},
 			prev: function (event) {
-				this.skip -= this.limit;
-				axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
-					.then((response) => {
-						this.items = response.data;
-					});
-			}
+                if (this.skip) {
+                    this.skip -= this.limit;
+                }
+                this.get();
+			},
+            get: function () {
+                axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+                    .then((response) => {
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
 		},
 		mounted() {
 			this.key = "key";
 			this.skip = 0;
-			axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
-				.then((response) => {
-					this.items = response.data;
-				}).catch((e) => {
-			       console.log(e);
-                })
+            this.get();
 		}
 	})
 </script>

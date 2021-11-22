@@ -3,13 +3,15 @@
 
 # pm2登録
 # pm2 start result.py --name result --interpreter python3
+
+import os
+import json
+import pathlib
+
 from typing import Any
 from datetime import datetime
 
 import uvicorn
-
-import os
-import json
 
 from pymongo import MongoClient
 import pandas as pd
@@ -29,10 +31,8 @@ from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 
-import pathlib
-
 PATH_ROOT = str(pathlib.Path(__file__).resolve().parent)
-PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent / "fastapi_templates")
+PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent / "templates")
 PATH_STATIC = str(pathlib.Path(__file__).resolve().parent / "static")
 
 app.mount("/static", StaticFiles(directory=PATH_STATIC), name="static")
@@ -59,7 +59,7 @@ def sister(name):
 
 
 def config():
-	json_open = open('config/tools_config.json', 'r')
+	json_open = open('config/default.json', 'r')
 	json_load = json.load(json_open)
 
 	host = json_load['host']
@@ -71,7 +71,7 @@ def config():
 
 
 def stripe_config():
-	json_open = open('config/tools_config.json', 'r')
+	json_open = open('config/default.json', 'r')
 	json_load = json.load(json_open)
 	stripe = json_load['stripe']
 	return stripe
