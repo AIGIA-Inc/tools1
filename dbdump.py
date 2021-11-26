@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import json
 import subprocess
@@ -14,7 +13,6 @@ class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescript
 
 help_desc_msg = """
 dbdump
-データベースバックアップ
 
 ex:
 python dbdump.py -s aigtokyo
@@ -27,8 +25,8 @@ end
 
 parser = argparse.ArgumentParser(description=help_desc_msg, epilog=help_epi_msg, formatter_class=HelpFormatter)
 
-parser.add_argument("-s", "--source", type=str, help="バックアップ元データベースコンフィグ(from)")
-parser.add_argument("-d", "--backupdir", type=str, default="~/backup", help="バックアップ先ディレクトリ(to)")
+parser.add_argument("-s", "--source", type=str, help="Config Name. (from)")
+parser.add_argument("-d", "--backupdir", type=str, default="~/backup", help="Directory Path. (to)")
 
 args = parser.parse_args()
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import json
 import subprocess
@@ -14,7 +13,6 @@ class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescript
 
 help_desc_msg = """
 dbrestore
-データベースリストア
 
 ex:
 python dbrestore.py -t local -d ~/backup/aig
@@ -26,8 +24,8 @@ end
 
 parser = argparse.ArgumentParser(description=help_desc_msg, epilog=help_epi_msg, formatter_class=HelpFormatter)
 
-parser.add_argument("-d", "--backupdir", type=str, help="バックアップディレクトリ(from)")
-parser.add_argument("-t", "--target", type=str, help="レストア先データベースコンフィグ(to)")
+parser.add_argument("-d", "--backupdir", type=str, help="Directory Path (from)")
+parser.add_argument("-t", "--target", type=str, help="Config Name. (to)")
 
 args = parser.parse_args()
 
