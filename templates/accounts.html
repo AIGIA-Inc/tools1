@@ -7,6 +7,14 @@
 		<div id="accounts">
 			<button type="button" class="btn btn-primary" v-on:click="next">Next</button>
 			<button type="button" class="btn btn-secondary" v-on:click="prev">Prev</button>
+			<div style="margin-top: 32px;">検索</div>
+			<div>
+			   <select v-model="selected" @change="onChangeInput($event)">
+					<option v-for="option in options" v-bind:value="option.name" v-bind:key="option.id">
+						[[ option.name ]]
+					</option>
+	        	</select>
+			</div>
 			<div style="margin-top: 32px;text-align: right;">
 				<h3>総件数: [[count]] 件</h3>
 			</div>
@@ -53,7 +61,13 @@
 				key: "",
 				limit: 20,
 				skip: 0,
-				count: 0
+				count: 0,
+				selected: '全て',
+				options: [
+                    { id: 1, name: '全て' },
+                    { id: 2, name: '課金' },
+                    { id: 3, name: '未登録' }
+                ]
 			}
 		},
 		methods: {
@@ -68,19 +82,22 @@
                 this.get();
 			},
             get: function () {
-                axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip)
+                axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip + "&category=" + this.selected)
                     .then((response) => {
                         this.items = response.data;
                     }).catch((e) => {
                     console.log(e);
                 })
-                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?key=' + this.key)
+                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?key=' + this.key + "&category=" + this.selected)
                     .then((response) => {
 	                    this.count = response.data;
                     }).catch((e) => {
                     console.log(e);
                 })
-
+            },
+            onChangeInput(event) {
+	            console.log(this.selected)
+	            this.get()
             },
 		},
 		mounted() {

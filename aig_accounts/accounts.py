@@ -62,7 +62,7 @@ def subscribe_type(stripe, username):
 		result = "エラー"
 	return result
 
-def add_user_row(stripe, accounts, relations, user, data):
+def add_user_row(stripe, accounts, relations, user, data, category):
 	if user['type'] == '':
 		trainer = None
 		studio = None
@@ -84,12 +84,19 @@ def add_user_row(stripe, accounts, relations, user, data):
 			#
 		#
 		subscribe: str = subscribe_type(stripe, user['username'])
-		data.append({'username': user['username'], "subscribe": subscribe, "date": user['create'],
-					 'auth': int(user['auth']), 'type': user['type'], "user": nickname(user),
-					 "trainer": nickname(trainer),
-					 "studio": nickname(studio), "company": nickname(company)})
 
-def add_trainer_row(stripe, accounts, relations, trainer, data):
+		if subscribe == category:
+			data.append({'username': user['username'], "subscribe": subscribe, "date": user['create'],
+						 'auth': int(user['auth']), 'type': user['type'], "user": nickname(user),
+						 "trainer": nickname(trainer),
+						 "studio": nickname(studio), "company": nickname(company)})
+		elif category == '全て':
+			data.append({'username': user['username'], "subscribe": subscribe, "date": user['create'],
+						 'auth': int(user['auth']), 'type': user['type'], "user": nickname(user),
+						 "trainer": nickname(trainer),
+						 "studio": nickname(studio), "company": nickname(company)})
+
+def add_trainer_row(stripe, accounts, relations, trainer, data, category):
 	if trainer['type'] == 'trainer':
 		studio = None
 		company = None
@@ -104,22 +111,27 @@ def add_trainer_row(stripe, accounts, relations, trainer, data):
 			#
 		#
 		subscribe: str = subscribe_type(stripe, trainer['username'])
-		data.append({'username': trainer['username'], "subscribe": subscribe, "date": trainer['create'],
-					 'auth': int(trainer['auth']), 'type': trainer['type'], "user": nickname(trainer), "trainer": "",
-					 "studio": nickname(studio), "company": nickname(company)})
 
-def accounts(aig, skip, limit, stripe):
+		if subscribe == category:
+			data.append({'username': trainer['username'], "subscribe": subscribe, "date": trainer['create'],
+						 'auth': int(trainer['auth']), 'type': trainer['type'], "user": nickname(trainer),
+						 "trainer": "",
+						 "studio": nickname(studio), "company": nickname(company)})
+		elif category == '全て':
+			data.append({'username': trainer['username'], "subscribe": subscribe, "date": trainer['create'],
+						 'auth': int(trainer['auth']), 'type': trainer['type'], "user": nickname(trainer), "trainer": "",
+						 "studio": nickname(studio), "company": nickname(company)})
+
+def accounts(aig, skip, limit, stripe, category):
 	data: list = []
 	if aig:
 		relations = aig.relations
 		accounts = aig.accounts
 		if accounts:
-
 			user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]}).skip(skip).limit(limit)
 			for user in user_cursor:
-				add_user_row(stripe, accounts, relations, user, data)
-				add_trainer_row(stripe, accounts, relations, user, data)
-
+				add_user_row(stripe, accounts, relations, user, data, category)
+				add_trainer_row(stripe, accounts, relations, user, data, category)
 		else:
 			raise Exception("collection error")
 	#
@@ -127,16 +139,19 @@ def accounts(aig, skip, limit, stripe):
 		raise Exception("database error")
 	return data
 
-def accounts_count(aig, stripe):
+def accounts_count(aig, stripe, category):
 	data: int = 0
 	if aig:
 		relations = aig.relations
 		accounts = aig.accounts
 		if accounts:
-
-			user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]}).count()
-			data = user_cursor
-
+			user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]})
+			for user in user_cursor:
+				subscribe: str = subscribe_type(stripe, user['username'])
+				if subscribe == category:
+					data += 1
+				elif category == "全て":
+					data += 1
 		else:
 			raise Exception("collection error")
 	#

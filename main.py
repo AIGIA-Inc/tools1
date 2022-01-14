@@ -127,7 +127,7 @@ def json_serial(user):
 
 
 @app.get('/api/accounts')
-def api_accounts(key: str = "", skip: int = 0, limit: int = 20):
+def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
 	from aig_accounts import accounts, payment
 	if key is not None:
 		host, path, _key, username, password = config()
@@ -136,7 +136,7 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20):
 				stripeconfig = stripe_config()
 				stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
 				with MongoClient(host, username=username, password=password, authSource="aig") as client:
-					users = accounts.accounts(client.aig, skip, limit, stripe)
+					users = accounts.accounts(client.aig, skip, limit, stripe, category)
 				return JSONResponse(content=list(map(json_serial, users)))
 			except Exception as e:
 				raise HTTPException(status_code=500, detail=e)
@@ -147,7 +147,7 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20):
 
 
 @app.get('/api/accounts/count')
-def api_accounts(key: str = "", skip: int = 0):
+def api_accounts(key: str = "", skip: int = 0, category: str = ""):
 	from aig_accounts import accounts, payment
 	if key is not None:
 		host, path, _key, username, password = config()
@@ -156,7 +156,7 @@ def api_accounts(key: str = "", skip: int = 0):
 				stripeconfig = stripe_config()
 				stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
 				with MongoClient(host, username=username, password=password, authSource="aig") as client:
-					users = accounts.accounts_count(client.aig, stripe)
+					users = accounts.accounts_count(client.aig, stripe, category)
 				return JSONResponse(content=users)
 
 			except Exception as e:
