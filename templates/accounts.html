@@ -7,6 +7,9 @@
 		<div id="accounts">
 			<button type="button" class="btn btn-primary" v-on:click="next">Next</button>
 			<button type="button" class="btn btn-secondary" v-on:click="prev">Prev</button>
+			<div style="margin-top: 32px;text-align: right;">
+				<h3>総件数: [[count]] 件</h3>
+			</div>
 			<table class="table">
 				<thead>
 				<tr>
@@ -49,7 +52,8 @@
 				items: [],
 				key: "",
 				limit: 20,
-				skip: 0
+				skip: 0,
+				count: 0
 			}
 		},
 		methods: {
@@ -70,6 +74,13 @@
                     }).catch((e) => {
                     console.log(e);
                 })
+                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?key=' + this.key)
+                    .then((response) => {
+	                    this.count = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+
             },
 		},
 		mounted() {
