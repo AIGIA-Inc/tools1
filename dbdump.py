@@ -53,8 +53,6 @@ def backup():
         else:
             subprocess.run(["mongodump", "--host", host, "-d", dbname, "-o", backup_dir])
 
-
-
 if __name__ == "__main__":
     try:
         backup()

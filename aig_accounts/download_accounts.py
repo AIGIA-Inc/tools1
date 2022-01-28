@@ -12,18 +12,18 @@ def traverse(data, relations, accounts, id, depth):
 		user_id = user_relation['from_id']
 		type = user_relation['type']
 		user = accounts.find_one({'user_id': user_id})
-		if user:
+		if user is not None:
 			data.append({'depth': depth, 'username': user['username']})
 			traverse(data, relations, accounts, user_id, depth)
 	return data
 
 def relation_tree(aig, rootuser):
 	data: list = []
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			relations = aig.relations
-			if relations:
+			if relations is not None:
 				system = accounts.find_one({'username': rootuser})
 				system_id = system['user_id']
 				data.append({'depth': 0, 'username': system['username']})
@@ -43,9 +43,9 @@ def excel_date(date1):
 
 def nickname(account):
 	result = ''
-	if account:
+	if account is not None:
 		content = account['content']
-		if content:
+		if content is not None:
 			result = content['nickname']
 	#
 	#
@@ -70,7 +70,7 @@ def subscribe_type(stripe, username):
 def belongs_user(relations, accounts, user_id):
 	result = None
 	account_rel = relations.find_one({"$and":[{'from_id': user_id}, {'type': 'belongs'}]})
-	if account_rel:
+	if account_rel is not None:
 		return accounts.find_one({'user_id': account_rel['to_id']})
 
 def add_user_row(stripe, accounts, relations, user, data):
@@ -79,15 +79,15 @@ def add_user_row(stripe, accounts, relations, user, data):
 		studio = None
 		company = None
 		trainer_rel = relations.find_one({'from_id': user['user_id']})
-		if trainer_rel:
+		if trainer_rel is not None:
 			trainer = accounts.find_one({'user_id': trainer_rel['to_id']})
-			if trainer:
+			if trainer is not None:
 				studio_rel = relations.find_one({'from_id': trainer['user_id']})
-				if studio_rel:
+				if studio_rel is not None:
 					studio = accounts.find_one({'user_id': studio_rel['to_id']})
-					if studio:
+					if studio is not None:
 						company_rel = relations.find_one({'from_id': studio['user_id']})
-						if company_rel:
+						if company_rel is not None:
 							company = accounts.find_one({'user_id': company_rel['to_id']})
 					#
 				#
@@ -105,11 +105,11 @@ def add_trainer_row(stripe, accounts, relations, trainer, data):
 		studio = None
 		company = None
 		studio_rel = relations.find_one({'from_id': trainer['user_id']})
-		if studio_rel:
+		if studio_rel is not None:
 			studio = accounts.find_one({'user_id': studio_rel['to_id']})
-			if studio:
+			if studio is not None:
 				company_rel = relations.find_one({'from_id': studio['user_id']})
-				if company_rel:
+				if company_rel is not None:
 					company = accounts.find_one({'user_id': company_rel['to_id']})
 				#
 			#
@@ -121,10 +121,10 @@ def add_trainer_row(stripe, accounts, relations, trainer, data):
 
 def accounts(aig, stripe):
 	data: list = []
-	if aig:
+	if aig is not None:
 		relations = aig.relations
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 
 			user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]})
 			for user in user_cursor:
@@ -139,12 +139,12 @@ def accounts(aig, stripe):
 
 def guest(aig, rootuser, type):
 	data: list = []
-	if aig:
+	if aig is not None:
 		relations = aig.relations
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			account = accounts.find_one({'username': rootuser})
-		if relations:
+		if relations is not None:
 			aggrigation_stages = [
 				{'$match': {'type': 'belongs'}},
 				{'$match': {'to_id': account['user_id']}},
@@ -219,12 +219,12 @@ def guest(aig, rootuser, type):
 
 def valid_relation(aig, includevalid):
 	data: list = []
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			#account = accounts.find_one({'username': rootuser})
 			relations = aig.relations
-			if relations:
+			if relations is not None:
 				relations_cursor = relations.find({})
 				for relation in relations_cursor:
 					from_user_id = relation['from_id']
@@ -233,7 +233,7 @@ def valid_relation(aig, includevalid):
 					to_user = accounts.find_one({'user_id': to_user_id})
 					type = relation['type']
 					if from_user and to_user:
-						if includevalid:
+						if includevalid is not None:
 							data.append({'from': from_user['username'], 'to': to_user['username'], "type": type})
 					elif not from_user:
 						data.append({'from': str(from_user_id), 'to': to_user['username'], "type": type})
@@ -263,13 +263,13 @@ def color_and_shape(type):
 	return result
 
 def relation_graph(aig, output, rootuser, maxDepth, engine):
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			account = accounts.find_one({'username': rootuser})
-			if account:
+			if account is not None:
 				relations = aig.relations
-				if relations:
+				if relations is not None:
 					aggrigation_stages = [
 						{'$match': {'type': 'belongs'}},
 						{'$match': {'to_id': account['user_id']}},
@@ -342,11 +342,11 @@ def relation_graph(aig, output, rootuser, maxDepth, engine):
 		raise Exception("database error")
 
 def repair(aig):
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			relations = aig.relations
-			if relations:
+			if relations is not None:
 				relations.delete_many({'$or': [{'from_id': None}, {'to_id': None}]})
 			else:
 				raise Exception("cursor error")

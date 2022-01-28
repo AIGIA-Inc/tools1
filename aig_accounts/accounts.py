@@ -20,11 +20,11 @@ def traverse(data, relations, accounts, id, depth):
 
 def relation_tree(aig, rootuser):
 	data: list = []
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			relations = aig.relations
-			if relations:
+			if relations is not None:
 				system = accounts.find_one({'username': rootuser})
 				system_id = system['user_id']
 				data.append({'depth': 0, 'username': system['username']})
@@ -39,9 +39,9 @@ def relation_tree(aig, rootuser):
 
 def nickname(account):
 	result = ''
-	if account:
+	if account is not None:
 		content = account['content']
-		if content:
+		if content is not None:
 			result = content['nickname']
 	#
 	#
@@ -62,21 +62,21 @@ def subscribe_type(stripe, username):
 		result = "エラー"
 	return result
 
-def add_user_row(stripe, accounts, relations, user, data):
+def add_user_row(stripe, accounts, relations, user, data, category):
 	if user['type'] == '':
 		trainer = None
 		studio = None
 		company = None
 		trainer_rel = relations.find_one({'from_id': user['user_id']})
-		if trainer_rel:
+		if trainer_rel is not None:
 			trainer = accounts.find_one({'user_id': trainer_rel['to_id']})
-			if trainer:
+			if trainer is not None:
 				studio_rel = relations.find_one({'from_id': trainer['user_id']})
-				if studio_rel:
+				if studio_rel is not None:
 					studio = accounts.find_one({'user_id': studio_rel['to_id']})
-					if studio:
+					if studio is not None:
 						company_rel = relations.find_one({'from_id': studio['user_id']})
-						if company_rel:
+						if company_rel is not None:
 							company = accounts.find_one({'user_id': company_rel['to_id']})
 						#
 					#
@@ -84,48 +84,81 @@ def add_user_row(stripe, accounts, relations, user, data):
 			#
 		#
 		subscribe: str = subscribe_type(stripe, user['username'])
-		data.append({'username': user['username'], "subscribe": subscribe, "date": user['create'],
-					 'auth': int(user['auth']), 'type': user['type'], "user": nickname(user),
-					 "trainer": nickname(trainer),
-					 "studio": nickname(studio), "company": nickname(company)})
 
-def add_trainer_row(stripe, accounts, relations, trainer, data):
+		if subscribe == category:
+			data.append({'username': user['username'], "subscribe": subscribe, "date": user['create'],
+						 'auth': int(user['auth']), 'type': user['type'], "user": nickname(user),
+						 "trainer": nickname(trainer),
+						 "studio": nickname(studio), "company": nickname(company)})
+		elif category == '全て':
+			data.append({'username': user['username'], "subscribe": subscribe, "date": user['create'],
+						 'auth': int(user['auth']), 'type': user['type'], "user": nickname(user),
+						 "trainer": nickname(trainer),
+						 "studio": nickname(studio), "company": nickname(company)})
+
+def add_trainer_row(stripe, accounts, relations, trainer, data, category):
 	if trainer['type'] == 'trainer':
 		studio = None
 		company = None
 		studio_rel = relations.find_one({'from_id': trainer['user_id']})
-		if studio_rel:
+		if studio_rel is not None:
 			studio = accounts.find_one({'user_id': studio_rel['to_id']})
-			if studio:
+			if studio is not None:
 				company_rel = relations.find_one({'from_id': studio['user_id']})
-				if company_rel:
+				if company_rel is not None:
 					company = accounts.find_one({'user_id': company_rel['to_id']})
 				#
 			#
 		#
 		subscribe: str = subscribe_type(stripe, trainer['username'])
-		data.append({'username': trainer['username'], "subscribe": subscribe, "date": trainer['create'],
-					 'auth': int(trainer['auth']), 'type': trainer['type'], "user": nickname(trainer), "trainer": "",
-					 "studio": nickname(studio), "company": nickname(company)})
 
-def accounts(aig, skip, limit, stripe):
+		if subscribe == category:
+			data.append({'username': trainer['username'], "subscribe": subscribe, "date": trainer['create'],
+						 'auth': int(trainer['auth']), 'type': trainer['type'], "user": nickname(trainer),
+						 "trainer": "",
+						 "studio": nickname(studio), "company": nickname(company)})
+		elif category == '全て':
+			data.append({'username': trainer['username'], "subscribe": subscribe, "date": trainer['create'],
+						 'auth': int(trainer['auth']), 'type': trainer['type'], "user": nickname(trainer), "trainer": "",
+						 "studio": nickname(studio), "company": nickname(company)})
+
+def accounts(aig, skip, limit, stripe, category):
 	data: list = []
-	if aig:
+	if aig is not None:
 		relations = aig.relations
 		accounts = aig.accounts
-		if accounts:
-
+		if accounts is not None:
 			user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]}).skip(skip).limit(limit)
 			for user in user_cursor:
-				add_user_row(stripe, accounts, relations, user, data)
-				add_trainer_row(stripe, accounts, relations, user, data)
-
+				add_user_row(stripe, accounts, relations, user, data, category)
+				add_trainer_row(stripe, accounts, relations, user, data, category)
 		else:
 			raise Exception("collection error")
 	#
 	else:
 		raise Exception("database error")
 	return data
+
+def accounts_count(aig, stripe, category):
+	data: int = 0
+	if aig:
+		relations = aig.relations
+		accounts = aig.accounts
+		if accounts is not None:
+			user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]})
+			for user in user_cursor:
+				subscribe: str = subscribe_type(stripe, user['username'])
+				if subscribe == category:
+					data += 1
+				elif category == "全て":
+					data += 1
+		else:
+			raise Exception("collection error")
+	#
+	else:
+		raise Exception("database error")
+	return data
+
 
 
 # 逆数
@@ -151,7 +184,7 @@ def totalling(aig, studio_name, stripe) -> (int, Any):
 		subscribe: Any = stripe.is_subscribe(account['username'])
 		if subscribe == 1:
 			links: Iterable = belongfromall(relations, account['user_id'])
-			if links:
+			if links is not None:
 				count = len(list(links))
 			#
 		#
@@ -161,10 +194,10 @@ def totalling(aig, studio_name, stripe) -> (int, Any):
 	if aig:
 		relations: Any = aig.relations
 		accounts: Any = aig.accounts
-		if accounts:
+		if accounts is not None:
 			count: float = 0.0
 			studio: Any = accounts.find_one({"username": studio_name})
-			if studio:
+			if studio is not None:
 				if studio['type'] == 'studio':
 					result["studio"] = studio['username']
 					for trainer_rel in belongtoall(relations, studio['user_id']):
@@ -196,9 +229,9 @@ def guest(aig, rootuser, type, skip, limit):
 	if aig:
 		relations = aig.relations
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			account = accounts.find_one({'username': rootuser})
-		if relations:
+		if relations is not None:
 			aggrigation_stages = [
 				{'$match': {'type': 'belongs'}},
 				{'$match': {'to_id': account['user_id']}},
@@ -276,12 +309,12 @@ def guest(aig, rootuser, type, skip, limit):
 
 def valid_relation(aig, includevalid):
 	data: list = []
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			#account = accounts.find_one({'username': rootuser})
 			relations = aig.relations
-			if relations:
+			if relations is not None:
 
 				relations_cursor = relations.find({})
 				for relation in relations_cursor:
@@ -323,13 +356,13 @@ def color_and_shape(type):
 
 
 def relation_graph(aig, output, rootuser, maxDepth, engine):
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			account: Any = accounts.find_one({'username': rootuser})
-			if account:
+			if account is not None:
 				relations = aig.relations
-				if relations:
+				if relations is not None:
 					aggrigation_stages: list = [
 						{'$match': {'type': 'belongs'}},
 						{'$match': {'to_id': account['user_id']}},
@@ -403,11 +436,11 @@ def relation_graph(aig, output, rootuser, maxDepth, engine):
 
 
 def repair(aig):
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			relations = aig.relations
-			if relations:
+			if relations is not None:
 				relations.delete_many({'$or': [{'from_id': None}, {'to_id': None}]})
 			else:
 				raise Exception("cursor error")
@@ -419,10 +452,9 @@ def repair(aig):
 
 def user_by_type(aig, type, skip, limit):
 	data: list = []
-	if aig:
+	if aig is not None:
 		accounts = aig.accounts
-		if accounts:
-
+		if accounts is not None:
 			users_cursor: Any = accounts.find({'type': type}).skip(skip).limit(limit)
 			for user in users_cursor:
 				username = user['username']

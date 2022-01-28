@@ -2,10 +2,10 @@
 
 def shots(aig, columns):
 	result: list = []
-	if aig:
+	if aig is not None:
 		shots = aig.shots
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			shots_cursor = shots.find({})
 			for shot in shots_cursor:
 				platform = shot['platform']
@@ -37,19 +37,24 @@ def shots(aig, columns):
 				if "name" in columns:
 					data["name"] = shot['name']
 				if "username" in columns:
-					data["username"] = platform['username']
+					data["username"] = shot['user_id']
 				if "club" in columns:
 					data["club"] = platform['description']['club']
 				if "score" in columns:
 					data["score"] = platform['description']['score']
+				description = platform['description']
 				if "postureScore" in columns:
-					data["postureScore"] = platform['description']['postureScore']
+					data["postureScore"] = 0
+					if hasattr(description,'postureScore'):
+						data["postureScore"] = description['postureScore']
 				if "ballisticScore" in columns:
-					data["ballisticScore"] = platform['description']['ballisticScore']
+					data["ballisticScore"] = 0
+					if hasattr(description,'ballisticScore'):
+						data["ballisticScore"] = description['ballisticScore']
 				if "studio" in columns:
-					data["studio"] = platform['description']['studio']
+					data["studio"] = description['studio']
 				if "sites" in columns:
-					data["sites"] = platform['description']['sites']
+					data["sites"] = description['sites']
 				if "前傾角度.address" in columns:
 					data["前傾角度.address"] = round(sm['前傾角度']['address']['metrics'], 2)
 				if "前傾角度.backswing" in columns:

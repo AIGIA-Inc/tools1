@@ -322,10 +322,10 @@ def shotdata(columns, shot, accounts):
 
 
 def shots(aig, query, skip, limit, sort, columns):
-	if aig:
+	if aig is not None:
 		shots = aig.shots
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			df = []
 			shots_cursor = shots.find(query).skip(skip).limit(limit).sort(sort, -1)
 			for shot in shots_cursor:
@@ -338,10 +338,10 @@ def shots(aig, query, skip, limit, sort, columns):
 
 
 def generate_shots(aig, query, skip, limit, sort, columns):
-	if aig:
+	if aig is not None:
 		shots = aig.shots
 		accounts = aig.accounts
-		if accounts:
+		if accounts is not None:
 			shots_cursor = shots.find(query).skip(skip).limit(limit).sort(sort, -1)
 			for shot in shots_cursor:
 				yield (shotdata(columns, shot, accounts))
