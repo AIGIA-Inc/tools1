@@ -4,3 +4,4 @@ config
 aig
 aig.svg
 .idea
+.vscode/sftp.json
