@@ -22,6 +22,9 @@ class Stripe:
 				packet = json.loads(response.read())
 				if packet['code'] == 0:
 					result = packet['value']
+				else :
+					result = -1
+
 		except Exception as e:
 			result = -3
 		return result
