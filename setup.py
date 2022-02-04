@@ -6,7 +6,7 @@ setup(
     packages=['aig_shots', 'aig_accounts'],
     url='',
     license='BSD',
-    author='oda',
-    author_email='oda.mikio@gmail.com',
+    author='kakusei',
+    author_email='oda@kakusei.com',
     description='for aig'
 )
