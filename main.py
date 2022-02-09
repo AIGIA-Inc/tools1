@@ -57,7 +57,6 @@ import logging
 def sister(name):
 	return os.path.expanduser(os.path.join(PATH_ROOT, name))
 
-
 def config():
 	json_open = open('config/default.json', 'r')
 	json_load = json.load(json_open)
@@ -75,6 +74,11 @@ def stripe_config():
 	json_load = json.load(json_open)
 	stripe = json_load['stripe']
 	return stripe
+
+
+def connect_string(protocol, username, password, host , db):
+	#return "mongodb://localhost/aig"
+	return protocol + "://" + username + ":" + password + "@" + host + "/" + db
 
 
 @app.get('/')
@@ -95,7 +99,7 @@ def tree(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
 	if key is not None:
 		host, path, _key, username, password = config()
 		if _key == key:
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				_accounts = accounts.relation_tree(client.aig, root)
 			return templates.TemplateResponse("accounts_tree.html", context={"request": request, "host": host, "path": path, "key": key, "rootuser": root, "accounts": _accounts})
 		else:
@@ -135,7 +139,7 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = 
 			try:
 				stripeconfig = stripe_config()
 				stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-				with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+				with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 					users = accounts.accounts(client.aig, skip, limit, stripe, category)
 				return JSONResponse(content=list(map(json_serial, users)))
 			except Exception as e:
@@ -155,7 +159,7 @@ def api_accounts(key: str = "", skip: int = 0, category: str = ""):
 			try:
 				stripeconfig = stripe_config()
 				stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-				with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+				with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 					users = accounts.accounts_count(client.aig, stripe, category)
 				return JSONResponse(content=users)
 
@@ -190,7 +194,7 @@ def api_totalling(key: str = "key", studio: str = ""):
 			try:
 				stripeconfig = stripe_config()
 				stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-				with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+				with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 					result = accounts.totalling(client.aig, studio, stripe)
 				return JSONResponse(content=result)
 			except Exception as e:
@@ -220,7 +224,7 @@ def api_guest(key: str = "", root: str = "admin@aigia.co.jp", type: str = "", sk
 		host, path, _key, username, password = config()
 		if _key == key:
 			_guests = []
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				_guests = accounts.guest(client.aig, root, type, skip, limit)
 			return JSONResponse(content=_guests)
 		else:
@@ -235,7 +239,7 @@ def validation(key: str = "key", root: str = "admin@aigia.co.jp"):
 	if key is not None:
 		host, path, _key, username, password = config()
 		if _key == key:
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				data = accounts.valid_relation(client.aig, True)
 				df = pd.DataFrame(data, columns=["from", "to", "type"])
 				output = sister("validation.csv")
@@ -255,7 +259,7 @@ def graph(request: Request, key: str = "key", root: str = "admin@aigia.co.jp", l
 		host, path, _key, username, password = config()
 		if _key == key:
 			# circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				output = sister("aig.svg")
 				accounts.relation_graph(client.aig, output, root, depth, layout)
 			return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
@@ -293,7 +297,7 @@ def shots(request: Request, key: str = "", query: Any = {}, sort: str = "platfor
 				"トータル", "トータルブレ", "キャリー", "キャリーブレ", "ヘッドスピード", "ボール初速", "ミート率", "打ち出し角 上下", "打ち出し角 左右", "バックスピン", "サイドスピン", "ブロー角", "ヘッド軌道", "フェイス角",
 			]
 
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				_shots, columns = shots.shots(client.aig, query, skip, limit, sort, columns)
 			return templates.TemplateResponse("shots.html", context={"request": request, "host": host, "path": path, "key": key, "shots": _shots, "columns": columns})
 		else:
@@ -329,7 +333,7 @@ def stream_shots(key: str = "", query: Any = {}, sort: str = "platform.descripti
 				"トータル", "トータルブレ", "キャリー", "キャリーブレ", "ヘッドスピード", "ボール初速", "ミート率", "打ち出し角 上下", "打ち出し角 左右", "バックスピン", "サイドスピン", "ブロー角", "ヘッド軌道", "フェイス角",
 			]
 
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				return StreamingResponse(shots.generate_shots(client.aig, query, skip, limit, sort, columns))
 		else:
 			raise HTTPException(status_code=403, detail="invalid key.")
@@ -343,7 +347,7 @@ def download_tree(key: str = "", root: str = "admin@aigia.co.jp"):
 	if key is not None:
 		host, path, _key, username, password = config()
 		if _key == key:
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				columns = ["depth", "username"]
 				data = download_accounts.relation_tree(client.aig, root)
 				df = pd.DataFrame(data, columns=columns)
@@ -364,7 +368,7 @@ def download_accounts(key: str = ""):
 		if _key == key:
 			stripeconfig = stripe_config()
 			stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				columns = ["company", "studio", "user", "username", "type", "subscribe", "date"]
 				data = download_accounts.accounts(client.aig, stripe)
 				df = pd.DataFrame(data, columns=columns)
@@ -383,7 +387,7 @@ def download_guest(key: str = "", root: str = "admin@aigia.co.jp", type: str = "
 	if key is not None:
 		host, path, _key, username, password = config()
 		if _key == key:
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				columns = ["username", "type", 'stripe_id']
 				data = download_accounts.guest(client.aig, root, type)
 				df = pd.DataFrame(data, columns=columns)
@@ -402,7 +406,7 @@ def download_validation(key: str = ""):
 	if key is not None:
 		host, path, _key, username, password = config()
 		if _key == key:
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				columns = ["from", "to", "type"]
 				data = download_accounts.valid_relation(client.aig, True)
 				df = pd.DataFrame(data, columns=columns)
@@ -422,7 +426,7 @@ def download_graph(key: str = "", root: str = "admin@aigia.co.jp", layout: str =
 		host, path, _key, username, password = config()
 		if _key == key:
 			# circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				output = sister("aig.svg")
 				download_accounts.relation_graph(client.aig, output, root, depth, layout)
 			return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
@@ -438,7 +442,7 @@ def download_shots(key: str = ""):
 	if key is not None:
 		host, path, _key, username, password = config()
 		if _key == key:
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				columns = ['name', 'username', 'club', 'score', 'postureScore', 'ballisticScore', 'studio', 'sites', "前傾角度.address", "前傾角度.backswing"]
 				data = download_shots.shots(client.aig, columns)
 				df = pd.DataFrame(data, columns=columns)
@@ -457,7 +461,7 @@ def usernames(key: str = "", type: str = "", skip: int = 0, limit: int = 20):
 	if key is not None:
 		host, path, _key, username, password = config()
 		if _key == key:
-			with MongoClient("mongodb+srv://" + username + ":" + password + "@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority") as client:
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				users = accounts.user_by_type(client.aig, type, skip, limit)
 			return JSONResponse(content=users)
 
