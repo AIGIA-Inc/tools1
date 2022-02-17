@@ -306,6 +306,40 @@ def shots(request: Request, key: str = "", query: Any = {}, sort: str = "platfor
 		raise HTTPException(status_code=403, detail="no key.")
 
 
+@app.get('/shoting')
+def shoting(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
+	if key is not None:
+		host, path, _key, username, password = config()
+		if _key == key:
+			return templates.TemplateResponse("shoting.html", context={"request": request, "host": host, "path": path, "key": key, "rootuser": root})
+		else:
+			raise HTTPException(status_code=403, detail="invalid key.")
+	else:
+		raise HTTPException(status_code=403, detail="no key.")
+
+@app.post('/api/shoting')
+def shoting(key: str = "", type: str = "", skip: int = 0, limit: int = 20):
+	from aig_accounts import accounts, payment
+	if key is not None:
+		host, path, _key, username, password = config()
+		if _key == key:
+			try:
+				# stripeconfig = stripe_config()
+				# stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
+				# with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
+				# 	result = accounts.totalling(client.aig, studio, stripe)
+				print('fff')
+				return JSONResponse(content={})
+			except Exception as e:
+				raise HTTPException(status_code=403, detail=e)
+		else:
+			raise HTTPException(status_code=403, detail="invalid key.")
+	else:
+		raise HTTPException(status_code=403, detail="no key.")
+
+	# raise HTTPException(status_code=403, detail="no key.")
+
+
 @app.get('/stream/shots')
 def stream_shots(key: str = "", query: Any = {}, sort: str = "platform.description.score", skip: int = 0, limit: int = 20):
 	from aig_shots import shots
