@@ -377,8 +377,7 @@ def shoting(item: Item):
                 for i in range(item.count):
                     print(i, "秒経過2")
                     time.sleep(5)
-                    print(item.count, "秒経過")
-                    url = "http://localhost/shotsm?f=/Users/naomamatsumoto/project/aig/data/20200218/20200218-170749.kar";
+                    url = "http://localhost/shotsm?f=/Users/" + os.environ.get("USER") + "/project/aig/data/20200218/20200218-170749.kar";
                     r = requests.get(url)
                     if i == item.count:
                         return JSONResponse(content={})
