@@ -28,6 +28,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
+import requests
 
 app = FastAPI()
 
@@ -328,6 +329,12 @@ def shoting(key: str = "", type: str = "", skip: int = 0, limit: int = 20):
 				# stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
 				# with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
 				# 	result = accounts.totalling(client.aig, studio, stripe)
+				print('fff１１１')
+
+				url = "http://localhost/shotsm?f=/Users/imaji/project/aig/data/20200218/20200218-170749.kar";
+				payload = {"key1": "value1", "key2": "value2"}
+
+				r = requests.get(url)
 				print('fff')
 				return JSONResponse(content={})
 			except Exception as e:
