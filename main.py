@@ -331,7 +331,7 @@ def shoting(key: str = "", type: str = "", skip: int = 0, limit: int = 20):
 				# 	result = accounts.totalling(client.aig, studio, stripe)
 				print('fff１１１')
 
-				url = "http://localhost/shotsm?f=/Users/imaji/project/aig/data/20200218/20200218-170749.kar";
+				url = "http://localhost/shotsm?f=/Users/naomamatsumoto/project/aig/data/20200218/20200218-170749.kar";
 				payload = {"key1": "value1", "key2": "value2"}
 
 				r = requests.get(url)
