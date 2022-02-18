@@ -10,6 +10,7 @@ import pathlib
 
 from typing import Any
 from datetime import datetime
+import time
 
 import uvicorn
 
@@ -366,30 +367,21 @@ class Item(BaseModel):
     key: str
     count: int = 0
 
-
 @app.post('/api/shoting')
 def shoting(item: Item):
     from aig_accounts import accounts, payment
-    print('fff222')
-    print(item.key)
-
     if item.key is not None:
         host, path, _key, username, password = config()
         if _key == item.key:
             try:
-                # stripeconfig = stripe_config()
-                # stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-                # with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
-                # 	result = accounts.totalling(client.aig, studio, stripe)
-                print('fff１１１')
-                print(item.count)
-
-                url = "http://localhost/shotsm?f=/Users/imaji/project/aig/data/20200218/20200218-170749.kar";
-                payload = {"key1": "value1", "key2": "value2"}
-
-                r = requests.get(url)
-                print('fff')
-                return JSONResponse(content={})
+                for i in range(item.count):
+                    print(i, "秒経過2")
+                    time.sleep(5)
+                    print(item.count, "秒経過")
+                    url = "http://localhost/shotsm?f=/Users/naomamatsumoto/project/aig/data/20200218/20200218-170749.kar";
+                    r = requests.get(url)
+                    if i == item.count:
+                        return JSONResponse(content={})
             except Exception as e:
                 raise HTTPException(status_code=403, detail=e)
         else:
