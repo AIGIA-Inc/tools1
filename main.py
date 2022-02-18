@@ -362,7 +362,6 @@ def shoting(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
     else:
         raise HTTPException(status_code=403, detail="no key.")
 
-
 class Item(BaseModel):
     key: str
     count: int = 0
