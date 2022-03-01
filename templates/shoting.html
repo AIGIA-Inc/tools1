@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+	<div class="row" style="margin:20px;padding:20px">
+		<div class="col-1">
+		</div>
+		<div class="col" id="shoting">
+			<div>test shots</div>
+            <div>count: <input type="text" v-model="count" ></div>
+            <div>
+    			<button type="button" class="btn btn-primary" v-on:click="shots">shots</button>
+            </div>
+		</div>
+		<div class="col-1">
+		</div>
+	</div>
+{% endblock %}
+{% block trailing %}
+<script>
+	new Vue({
+		el: "#shoting",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				protocol: "http:",
+				host: "localhost:5000",
+				options: [
+                    { id: 1, name: '全て' },
+                ],
+                count: 0,
+			}
+		},
+		methods: {
+			shots: function (event) {
+                axios.post(this.protocol + '//' + this.host + '/api/shoting', {
+                    key: this.key,
+                    count: this.count,
+                }).then((response) => {
+                    console.log(response);
+                    }).catch((e) => {
+                    console.log(e);
+                })
+			},
+		},
+		mounted() {
+			this.key = "key";
+			this.skip = 0;
+		}
+	})
+</script>
+{% endblock %}
