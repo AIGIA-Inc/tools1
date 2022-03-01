@@ -77,8 +77,8 @@ def stripe_config():
 
 
 def connect_string(protocol, username, password, host , db):
-	#return "mongodb://localhost/aig"
-	return protocol + "://" + username + ":" + password + "@" + host + "/" + db
+	return "mongodb://localhost/aig"
+	#return protocol + "://" + username + ":" + password + "@" + host + "/" + db
 
 
 @app.get('/')
