@@ -48,11 +48,11 @@ def counts(connection: str, db: str, collection_names: List[str]):
     return result
 
 
-# from_connection: str = "mongodb+srv://aigreporter:33550336@cluster0.co9ud.mongodb.net/aig?retryWrites=true&w=majority"
-# to_connection: str   = "mongodb+srv://aigmaster:33550336@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority"
+from_connection: str = "mongodb+srv://aigreporter:33550336@cluster0.co9ud.mongodb.net/aig?retryWrites=true&w=majority"
+to_connection: str   = "mongodb+srv://aigmaster:33550336@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority"
 
-from_connection: str = "mongodb+srv://aigreporter:33550336@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority"
-to_connection: str = "mongodb://localhost/aig"
+# from_connection: str = "mongodb+srv://aigreporter:33550336@cluster0.od1kc.mongodb.net/aig?retryWrites=true&w=majority"
+# to_connection: str = "mongodb://localhost/aig"
 
 db_name: str = "aig"
 collections: List[str] = ["accounts",

@@ -29,7 +29,7 @@ if __name__ == "__main__":
                                      "/product/aig_accounts",
                                      "/product/aig_shots"
                                      ])))
-    pprint.pprint(list(map(build_file, ["/main.py","/setup.py",
+    pprint.pprint(list(map(build_file, ["/main.py","/setup.py","/mongocopy.py",
                                 "/requirements.txt",
                                 "/aig_accounts/__init__.py",
                                 "/aig_accounts/accounts.py",
