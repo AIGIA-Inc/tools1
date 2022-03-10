@@ -598,6 +598,10 @@ def api_error_handler(request: Request, exception: HTTPException):
 def accounts(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
     driver = webdriver.Chrome(executable_path="./chromedriver")  # Windowsの方はこの行をコメントアウト
     driver.get("http://localhost:3000")
+    driver.find_element_by_id('regist').click()
+    driver.find_element_by_id('mat-input-2').send_keys("test@gmail.com")
+
+    # driver.find_element_by_id("ID").send_keys("strings")
 
 
 if __name__ == "__main__":
