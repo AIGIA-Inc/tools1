@@ -31,7 +31,8 @@ from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
-
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys as keys
 import requests
 
 app = FastAPI()
@@ -591,6 +592,12 @@ def totallings(request: Request, key: str = ""):
 def api_error_handler(request: Request, exception: HTTPException):
     host, path, key, username, password = config()
     return templates.TemplateResponse("error.html", context={"request": request, "key": key, "error": exception})
+
+
+@app.get('/selenium')
+def accounts(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
+    driver = webdriver.Chrome(executable_path="./chromedriver")  # Windowsの方はこの行をコメントアウト
+    driver.get("http://localhost:3000")
 
 
 if __name__ == "__main__":
