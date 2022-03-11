@@ -596,12 +596,17 @@ def api_error_handler(request: Request, exception: HTTPException):
 
 @app.get('/selenium')
 def accounts(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
+    return templates.TemplateResponse("selenium.html",
+                                      context={"request": request, "rootuser": root})
+    # driver.find_element_by_id("ID").send_keys("strings")
+
+
+@app.get('/api/selenium/account-add')
+def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
     driver = webdriver.Chrome(executable_path="./chromedriver")  # Windowsの方はこの行をコメントアウト
     driver.get("http://localhost:3000")
     driver.find_element_by_id('regist').click()
     driver.find_element_by_id('mat-input-2').send_keys("test@gmail.com")
-
-    # driver.find_element_by_id("ID").send_keys("strings")
 
 
 if __name__ == "__main__":

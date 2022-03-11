@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row" style="margin:20px;padding:20px">
+	<div class="col-1">
+	</div>
+	<div class="col">
+		<div id="accounts">
+			<div v-on:click="accountAdd">アカウント登録</div>
+			<div v-on:click="login">ログイン</div>
+			<button type="button" class="btn btn-primary" v-on:click="next">Next</button>
+			<button type="button" class="btn btn-secondary" v-on:click="prev">Prev</button>
+			<div style="margin-top: 32px;">検索</div>
+
+		</div>
+	</div>
+	<div class="col-1">
+	</div>
+</div>
+{% endblock %}
+{% block trailing %}
+<script>
+	new Vue({
+		el: "#accounts",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				protocol: "http:",
+				host: "localhost:5000",
+				items: [],
+				key: "",
+				limit: 20,
+				skip: 0,
+				count: 0,
+				selected: '全て',
+				options: [
+                    { id: 1, name: '全て' },
+                    { id: 2, name: '課金' },
+                    { id: 3, name: '未登録' }
+                ]
+			}
+		},
+		methods: {
+			accountAdd: function (event) {
+				this.skip += this.limit;
+                this.get('/api/selenium/account-add');
+			},
+			login: function (event) {
+                if (this.skip) {
+                    this.skip -= this.limit;
+                }
+                this.get('/api/selenium/login');
+			},
+            get: function (url) {
+                axios.get(this.protocol + '//' + this.host + url)
+                    .then((response) => {
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?key=' + this.key + "&category=" + this.selected)
+                    .then((response) => {
+	                    this.count = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+            onChangeInput(event) {
+	            console.log(this.selected)
+	            this.get()
+            },
+		},
+		mounted() {
+			this.key = "key";
+			this.skip = 0;
+            this.get();
+		}
+	})
+</script>
+{% endblock %}
