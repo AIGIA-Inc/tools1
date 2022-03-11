@@ -608,6 +608,13 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = 
     driver.find_element_by_id('regist').click()
     driver.find_element_by_id('mat-input-2').send_keys("test@gmail.com")
 
+@app.get('/api/selenium/login')
+def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
+    driver = webdriver.Chrome(executable_path="./chromedriver")  # Windowsの方はこの行をコメントアウト
+    driver.get("http://localhost:3000")
+    driver.find_element_by_id('mat-input-0').send_keys("system@gmail.com")
+    driver.find_element_by_id('mat-input-1').send_keys("ima10ji17fun")
+    driver.find_element_by_id('topLogin').click()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=5000, log_level="info")
