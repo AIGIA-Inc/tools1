@@ -600,7 +600,6 @@ def accounts(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
                                       context={"request": request, "rootuser": root})
     # driver.find_element_by_id("ID").send_keys("strings")
 
-
 @app.get('/api/selenium/account-add')
 def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
     driver = webdriver.Chrome(executable_path="./chromedriver")  # Windowsの方はこの行をコメントアウト
@@ -610,11 +609,30 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = 
 
 @app.get('/api/selenium/login')
 def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
+    array = []  # 空のリスト
     driver = webdriver.Chrome(executable_path="./chromedriver")  # Windowsの方はこの行をコメントアウト
     driver.get("http://localhost:3000")
     driver.find_element_by_id('mat-input-0').send_keys("system@gmail.com")
     driver.find_element_by_id('mat-input-1').send_keys("ima10ji17fun")
-    driver.find_element_by_id('topLogin').click()
+    array += ['ログイン成功']
+    print(array)
+    driver.find_element_by_id('mat-login').click()
+    time.sleep(3)
+    driver.find_element_by_id('mat-side-menu-shotdata').click()
+
+@app.get('/api/selenium/shotdata')
+def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
+    array = []  # 空のリスト
+    driver = webdriver.Chrome(executable_path="./chromedriver")  # Windowsの方はこの行をコメントアウト
+    driver.get("http://localhost:3000")
+    driver.find_element_by_id('mat-input-0').send_keys("system@gmail.com")
+    driver.find_element_by_id('mat-input-1').send_keys("ima10ji17fun")
+    array += ['ログイン成功']
+    print(array)
+    driver.find_element_by_id('mat-login').click()
+    time.sleep(3)
+    driver.find_element_by_id('mat-side-menu-shotdata').click()
+    return FileResponse(path=output, media_type='text/csv', filename="shots.csv")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=5000, log_level="info")
