@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # pm2登録
-# pm2 start result.py --name result --interpreter python3
+# pm2 start main.py --name reporter --interpreter python3
 
 import os
 import json
@@ -375,7 +375,7 @@ def shoting(item: Item):
                 for i in range(item.count):
                     print(i, "秒経過2")
                     time.sleep(5)
-                    url = "http://localhost/shotsm?f=/Users/" + os.environ.get("USER") + "/project/aig/data/20200218/20200218-170749.kar";
+                    url = "http://localhost/shotsm?f=/Users/" + os.environ.get("USER") + "/project/aig/data/20200218/20200218-170749.kar"
                     r = requests.get(url)
                     if i == item.count:
                         return JSONResponse(content={})
