@@ -159,7 +159,21 @@ def accounts_count(aig, stripe, category):
 		raise Exception("database error")
 	return data
 
+def accounts_studio(aig, stripe):
+	data: str = ''
+	if aig:
+		relations = aig.relations
+		accounts = aig.accounts
+		if accounts:
+			data = accounts.distinct('content.description')
+			# user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]}, {'$and': [{nickname: "fda"}]})
 
+		else:
+			raise Exception("collection error")
+	#
+	else:
+		raise Exception("database error")
+	return data
 
 # 逆数
 def reciprocal(dev: int) -> float:

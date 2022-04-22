@@ -14,6 +14,11 @@
 						[[ option.name ]]
 					</option>
 	        	</select>
+			   <select v-model="selected" @change="onChangeInput($event)">
+					<option v-for="option in studio" v-bind:value="option.name" v-bind:key="option.id">
+						[[ option ]]
+					</option>
+	        	</select>
 			</div>
 			<div style="margin-top: 32px;text-align: right;">
 				<h3>総件数: [[count]] 件</h3>
@@ -63,6 +68,7 @@
 				skip: 0,
 				count: 0,
 				selected: '全て',
+				studio: [],
 				options: [
                     { id: 1, name: '全て' },
                     { id: 2, name: '課金' },
@@ -94,6 +100,12 @@
                     }).catch((e) => {
                     console.log(e);
                 })
+				axios.get(this.protocol + '//' + this.host + '/api/accounts/studio?key=' + this.key)
+                    .then((response) => {
+	                    this.studio = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+				})
             },
             onChangeInput(event) {
 	            console.log(this.selected)

@@ -183,6 +183,27 @@ def api_accounts(key: str = "", skip: int = 0, category: str = ""):
     else:
         raise HTTPException(status_code=403, detail="no key.")
 
+@app.get('/api/accounts/studio')
+def api_accounts(key: str = "", category: str = ""):
+    from aig_accounts import accounts, payment
+    if key is not None:
+        host, path, _key, username, password = config()
+        if _key == key:
+            try:
+                stripeconfig = stripe_config()
+                stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
+                with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
+                                                "aig?retryWrites=true&w=majority")) as client:
+                    users = accounts.accounts_studio(client.aig, stripe)
+                return JSONResponse(content=users)
+
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=e)
+        else:
+            raise HTTPException(status_code=403, detail="invalid key.")
+    else:
+        raise HTTPException(status_code=403, detail="no key.")
+
 
 @app.get('/totalling')
 def totalling(request: Request, key: str = "", root: str = "admin@aigia.co.jp", studio: str = ""):
