@@ -163,7 +163,7 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = 
 
 
 @app.get('/api/accounts/count')
-def api_accounts(key: str = "", skip: int = 0, category: str = ""):
+def api_accounts(key: str = "", skip: int = 0, category: str = "", studio: str = ""):
     from aig_accounts import accounts, payment
     if key is not None:
         host, path, _key, username, password = config()
@@ -173,7 +173,7 @@ def api_accounts(key: str = "", skip: int = 0, category: str = ""):
                 stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
                 with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
                                                 "aig?retryWrites=true&w=majority")) as client:
-                    users = accounts.accounts_count(client.aig, stripe, category)
+                    users = accounts.accounts_count(client.aig, stripe, category, studio)
                 return JSONResponse(content=users)
 
             except Exception as e:

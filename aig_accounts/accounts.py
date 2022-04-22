@@ -133,13 +133,14 @@ def accounts(aig, skip, limit, stripe, category, studio):
 				add_user_row(stripe, accounts, relations, user, data, category)
 				add_trainer_row(stripe, accounts, relations, user, data, category)
 		else:
-			raise Exception("collection error")
+			raise Exception("collection error")def connect_string(protocol, username, password, host, db):
+
 	#
 	else:
 		raise Exception("database error")
 	return data
 
-def accounts_count(aig, stripe, category):
+def accounts_count(aig, stripe, category, studio):
 	data: int = 0
 	if aig:
 		relations = aig.relations
@@ -160,14 +161,17 @@ def accounts_count(aig, stripe, category):
 	return data
 
 def accounts_studio(aig, stripe):
-	data: str = ''
+	data: list = []
 	if aig:
 		relations = aig.relations
 		accounts = aig.accounts
 		if accounts:
-			data = accounts.distinct('content.description')
-			# user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]}, {'$and': [{nickname: "fda"}]})
-
+			# data = accounts.distinct('content.description')
+			user_cursor = accounts.find({"type": "studio"})	#
+			for user in user_cursor:
+				content = user['content']
+				if content:
+					data.append(content['nickname'])
 		else:
 			raise Exception("collection error")
 	#

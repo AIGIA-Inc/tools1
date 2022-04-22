@@ -95,7 +95,7 @@
                     }).catch((e) => {
                     console.log(e);
                 })
-                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?key=' + this.key + "&category=" + this.selected)
+                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?key=' + this.key + "&category=" + this.selected + "&studio=" + this.studio_selected)
                     .then((response) => {
 	                    this.count = response.data;
                     }).catch((e) => {
