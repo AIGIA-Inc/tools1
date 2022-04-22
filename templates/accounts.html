@@ -14,8 +14,8 @@
 						[[ option.name ]]
 					</option>
 	        	</select>
-			   <select v-model="selected" @change="onChangeInput($event)">
-					<option v-for="option in studio" v-bind:value="option.name" v-bind:key="option.id">
+			   <select v-model="studio_selected" @change="onChangeInput($event)">
+					<option v-for="option in studio" v-bind:value="option" v-bind:key="option">
 						[[ option ]]
 					</option>
 	        	</select>
@@ -68,6 +68,7 @@
 				skip: 0,
 				count: 0,
 				selected: '全て',
+				studio_selected: '',
 				studio: [],
 				options: [
                     { id: 1, name: '全て' },
@@ -88,7 +89,7 @@
                 this.get();
 			},
             get: function () {
-                axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip + "&category=" + this.selected)
+                axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip + "&category=" + this.selected + "&studio=" + this.studio_selected)
                     .then((response) => {
                         this.items = response.data;
                     }).catch((e) => {
@@ -109,6 +110,7 @@
             },
             onChangeInput(event) {
 	            console.log(this.selected)
+	            console.log(this.studio_selected)
 	            this.get()
             },
 		},

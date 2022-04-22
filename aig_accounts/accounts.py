@@ -122,13 +122,13 @@ def add_trainer_row(stripe, accounts, relations, trainer, data, category):
 						 'auth': int(trainer['auth']), 'type': trainer['type'], "user": nickname(trainer), "trainer": "",
 						 "studio": nickname(studio), "company": nickname(company)})
 
-def accounts(aig, skip, limit, stripe, category):
+def accounts(aig, skip, limit, stripe, category, studio):
 	data: list = []
 	if aig:
 		relations = aig.relations
 		accounts = aig.accounts
 		if accounts:
-			user_cursor = accounts.find({"$or": [{"type": ""}, {"type": "trainer"}]}).skip(skip).limit(limit)
+			user_cursor = accounts.find({"$and":[ {"$or": [{"type": ""}, {"type": "trainer"}]}, {"content.description": studio}]}).skip(skip).limit(limit)
 			for user in user_cursor:
 				add_user_row(stripe, accounts, relations, user, data, category)
 				add_trainer_row(stripe, accounts, relations, user, data, category)

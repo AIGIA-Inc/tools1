@@ -142,7 +142,7 @@ def json_serial(user):
 
 
 @app.get('/api/accounts')
-def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
+def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = "", studio: str = ''):
     from aig_accounts import accounts, payment
     if key is not None:
         host, path, _key, username, password = config()
@@ -152,7 +152,7 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = 
                 stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
                 with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
                                                 "aig?retryWrites=true&w=majority")) as client:
-                    users = accounts.accounts(client.aig, skip, limit, stripe, category)
+                    users = accounts.accounts(client.aig, skip, limit, stripe, category, studio)
                 return JSONResponse(content=list(map(json_serial, users)))
             except Exception as e:
                 raise HTTPException(status_code=500, detail=e)
