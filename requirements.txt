@@ -14,11 +14,9 @@ flatbuffers==1.12
 gast==0.4.0
 google-auth==1.32.1
 google-auth-oauthlib==0.4.4
-google-pasta==0.2.0
 graphviz==0.17
 grpcio==1.43.0
 h11==0.12.0
-h5py==3.6.0
 idna==2.10
 itsdangerous==2.0.1
 Jinja2==3.0.3
@@ -26,8 +24,6 @@ joblib==1.1.0
 keras==2.7.0
 keras-nightly==2.5.0.dev2021032900
 Keras-Preprocessing==1.1.2
-Kivy==2.0.0
-Kivy-Garden==0.1.4
 libclang==12.0.0
 Markdown==3.3.4
 MarkupSafe==2.0.1
