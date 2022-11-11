@@ -81,6 +81,7 @@
                 }
                 this.get();
 			},
+			
             get: function () {
                 axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip + "&category=" + this.selected)
                     .then((response) => {
