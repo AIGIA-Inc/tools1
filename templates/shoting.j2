@@ -32,7 +32,6 @@
 		methods: {
 			shots: function (event) {
                 axios.post(this.protocol + '//' + this.host + '/api/shoting', {
-                    key: this.key,
                     count: this.count,
                 }).then((response) => {
                     console.log(response);
@@ -42,7 +41,6 @@
 			},
 		},
 		mounted() {
-			this.key = "key";
 			this.skip = 0;
 		}
 	})

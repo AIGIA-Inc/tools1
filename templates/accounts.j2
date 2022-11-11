@@ -10,7 +10,7 @@
 			<div style="margin-top: 32px;">検索</div>
 			<div>
 			   <select v-model="selected" @change="onChangeInput($event)">
-					<option v-for="option in options" v-bind:value="option.name" v-bind:key="option.id">
+					<option v-for="option in options" v-bind:value="option.name">
 						[[ option.name ]]
 					</option>
 	        	</select>
@@ -58,7 +58,6 @@
 				protocol: "http:",
 				host: "localhost:5000",
 				items: [],
-				key: "",
 				limit: 20,
 				skip: 0,
 				count: 0,
@@ -82,13 +81,13 @@
                 this.get();
 			},
             get: function () {
-                axios.get(this.protocol + '//' + this.host + '/api/accounts?key=' + this.key + "&limit=" + this.limit + "&skip=" + this.skip + "&category=" + this.selected)
+                axios.get(this.protocol + '//' + this.host + '/api/accounts?limit=" + this.limit + "&skip=" + this.skip + "&category=" + this.selected)
                     .then((response) => {
                         this.items = response.data;
                     }).catch((e) => {
                     console.log(e);
                 })
-                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?key=' + this.key + "&category=" + this.selected)
+                axios.get(this.protocol + '//' + this.host + '/api/accounts/count?category=" + this.selected)
                     .then((response) => {
 	                    this.count = response.data;
                     }).catch((e) => {
@@ -101,7 +100,7 @@
             },
 		},
 		mounted() {
-			this.key = "key";
+
 			this.skip = 0;
             this.get();
 		}

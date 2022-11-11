@@ -36,15 +36,13 @@
 				protocol: "http:",
 				host: "localhost:5000",
 				item: {studio:'', count: 0},
-				key: "",
 				studio: studio_name
 			}
 		},
 		methods: {
 		},
 		mounted() {
-			this.key = "key";
-			axios.get(this.protocol + '//' + this.host + '/api/totalling?key=' + this.key + "&studio=" + this.studio)
+			axios.get(this.protocol + '//' + this.host + '/api/totalling?studio=" + this.studio)
 				.then((response) => {
 					this.item = response.data;
 				});

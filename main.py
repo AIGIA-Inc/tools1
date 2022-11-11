@@ -70,10 +70,9 @@ def config():
 
     host = json_load['host']
     path = json_load['path']
-    key = json_load['key']
     username = json_load['username']
     password = json_load['password']
-    return host, path, key, username, password
+    return host, path, username, password
 
 
 def stripe_config():
@@ -87,13 +86,10 @@ def connect_string(protocol, username, password, host, db):
     #return "mongodb://localhost/aig"
     return protocol + "://" + username + ":" + password + "@" + host + "/" + db
 
-
 @app.get('/')
 def index(request: Request, key: str = "", root: str = "admin@aigia.co.jp", layout: str = "fdp"):
-    host, path, _key, username, password = config()
-    return templates.TemplateResponse("index.j2",
-                                      context={"request": request, "host": host, "path": path, "key": _key,
-                                               "rootuser": root, "layout": layout})
+    host, path, username, password = config()
+    return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
 
 
 """
@@ -111,12 +107,12 @@ def tree(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
 
 
 @app.get('/accounts')
-def accounts(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
-    host, path, _key, username, password = config()
+def accounts(request: Request, root: str = "admin@aigia.co.jp"):
+    host, path, username, password = config()
 
     try:
         return templates.TemplateResponse("accounts.j2",
-                                          context={"request": request, "host": host, "path": path, "key": key,
+                                          context={"request": request, "host": host, "path": path,
                                                    "rootuser": root})
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
@@ -130,10 +126,10 @@ def json_serial(user):
 
 
 @app.get('/api/accounts')
-def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = ""):
+def api_accounts(skip: int = 0, limit: int = 20, category: str = ""):
     from aig_accounts import accounts, payment
 
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
 
     try:
         stripeconfig = stripe_config()
@@ -147,9 +143,9 @@ def api_accounts(key: str = "", skip: int = 0, limit: int = 20, category: str = 
 
 
 @app.get('/api/accounts/count')
-def api_accounts(key: str = "", skip: int = 0, category: str = ""):
+def api_accounts(skip: int = 0, category: str = ""):
     from aig_accounts import accounts, payment
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
 
     try:
         stripeconfig = stripe_config()
@@ -164,20 +160,20 @@ def api_accounts(key: str = "", skip: int = 0, category: str = ""):
 
 
 @app.get('/totalling')
-def totalling(request: Request, key: str = "", root: str = "admin@aigia.co.jp", studio: str = ""):
-    host, path, _key, username, password = config()
+def totalling(request: Request, root: str = "admin@aigia.co.jp", studio: str = ""):
+    host, path, username, password = config()
     try:
         return templates.TemplateResponse("totalling.j2",
-                                          context={"request": request, "host": host, "path": path, "key": key,
+                                          context={"request": request, "host": host, "path": path,
                                                    "rootuser": root, "studio": studio})
     except Exception as e:
         raise HTTPException(status_code=403, detail=e)
 
 
 @app.get('/api/totalling')
-def api_totalling(key: str = "key", studio: str = ""):
+def api_totalling( studio: str = ""):
     from aig_accounts import accounts, payment
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     try:
         stripeconfig = stripe_config()
         stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
@@ -190,17 +186,17 @@ def api_totalling(key: str = "key", studio: str = ""):
 
 
 @app.get('/guest')
-def guest(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
-    host, path, _key, username, password = config()
+def guest(request: Request, root: str = "admin@aigia.co.jp"):
+    host, path, username, password = config()
     return templates.TemplateResponse("guests.j2",
-                                      context={"request": request, "host": host, "path": path, "key": key,
+                                      context={"request": request, "host": host, "path": path,
                                                "rootuser": root})
 
 
 @app.get('/api/guest')
-def api_guest(key: str = "", root: str = "admin@aigia.co.jp", type: str = "", skip: int = 0, limit: int = 20):
+def api_guest(root: str = "admin@aigia.co.jp", type: str = "", skip: int = 0, limit: int = 20):
     from aig_accounts import accounts
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     _guests = []
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
                                     "aig?retryWrites=true&w=majority")) as client:
@@ -242,10 +238,10 @@ def graph(request: Request, key: str = "key", root: str = "admin@aigia.co.jp", l
 
 
 @app.get('/shots')
-def shots(request: Request, key: str = "", query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
+def shots(request: Request, query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
           limit: int = 20):
     from aig_shots import shots
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     columns = [
         "name", "username", "club", "score", "postureScore", "ballisticScore", "studio", "sites",
         "前傾角度.address", "前傾角度.backswing", "前傾角度.top", "前傾角度.halfdown", "前傾角度.impact",
@@ -302,15 +298,15 @@ def shots(request: Request, key: str = "", query: Any = {}, sort: str = "platfor
                                     "aig?retryWrites=true&w=majority")) as client:
         _shots, columns = shots.shots(client.aig, query, skip, limit, sort, columns)
     return templates.TemplateResponse("shots.j2",
-                                      context={"request": request, "host": host, "path": path, "key": key,
+                                      context={"request": request, "host": host, "path": path,
                                                "shots": _shots, "columns": columns})
 
 
 @app.get('/shoting')
-def shoting(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
-    host, path, _key, username, password = config()
+def shoting(request: Request, root: str = "admin@aigia.co.jp"):
+    host, path, username, password = config()
     return templates.TemplateResponse("shoting.j2",
-                                      context={"request": request, "host": host, "path": path, "key": key,
+                                      context={"request": request, "host": host, "path": path,
                                                "rootuser": root})
 
 
@@ -322,7 +318,7 @@ class Item(BaseModel):
 @app.post('/api/shoting')
 def shoting(item: Item):
     from aig_accounts import accounts, payment
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     try:
         for i in range(item.count):
             print(i, "秒経過2")
@@ -340,10 +336,10 @@ def shoting(item: Item):
 
 
 @app.get('/stream/shots')
-def stream_shots(key: str = "", query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
+def stream_shots(query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
                  limit: int = 20):
     from aig_shots import shots
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     columns = [
         "name", "username", "club", "score", "postureScore", "ballisticScore", "studio", "sites",
         "前傾角度.address", "前傾角度.backswing", "前傾角度.top", "前傾角度.halfdown", "前傾角度.impact",
@@ -402,10 +398,10 @@ def stream_shots(key: str = "", query: Any = {}, sort: str = "platform.descripti
 
 
 @app.get('/download/graph')
-def download_graph(key: str = "", root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
+def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
     # from aig_accounts import download_accounts
     from aig_accounts import accounts
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     # circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
                                     "aig?retryWrites=true&w=majority")) as client:
@@ -415,9 +411,9 @@ def download_graph(key: str = "", root: str = "admin@aigia.co.jp", layout: str =
 
 
 @app.get('/usernames')
-def usernames(key: str = "", type: str = "", skip: int = 0, limit: int = 20):
+def usernames(type: str = "", skip: int = 0, limit: int = 20):
     from aig_accounts import accounts
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
                                     "aig?retryWrites=true&w=majority")) as client:
         users = accounts.user_by_type(client.aig, type, skip, limit)
@@ -425,15 +421,13 @@ def usernames(key: str = "", type: str = "", skip: int = 0, limit: int = 20):
 
 
 @app.get('/totallings', response_class=HTMLResponse)
-def totallings(request: Request, key: str = ""):
-    host, path, _key, username, password = config()
-    return templates.TemplateResponse("totallings.j2", context={"request": request, "key": key})
-
-#スタジオでループ
+def totallings(request: Request):
+    host, path, username, password = config()
+    return templates.TemplateResponse("totallings.j2", context={"request": request})
 
 @app.get('/studios')
 def studio_list(request: Request):
-    host, path, _key, username, password = config()
+    host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
                                     "aig?retryWrites=true&w=majority")) as client:
         studios = []
@@ -503,8 +497,8 @@ def api_accounts(client,item_id):
 # 例外処理
 @app.exception_handler(HTTPException)
 def api_error_handler(request: Request, exception: HTTPException):
-    host, path, key, username, password = config()
-    return templates.TemplateResponse("error.j2", context={"request": request, "key": key, "error": exception})
+    host, path, username, password = config()
+    return templates.TemplateResponse("error.j2", context={"request": request, "error": exception})
 
 
 if __name__ == "__main__":

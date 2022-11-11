@@ -6,10 +6,9 @@ import json
 
 class Stripe:
 
-	def __init__(self, protocol, host, key):
+	def __init__(self, protocol, host):
 		self.protocol = protocol
 		self.host = host
-		self.key = key
 
 #  1 subscribed.
 #  0 unsubscribed.
@@ -18,7 +17,7 @@ class Stripe:
 # -3 error.
 	def is_subscribe(self, username):
 		try:
-			with request.urlopen(f"{self.protocol}://{self.host}/public/subscribe/{username}?key={self.key}") as response:
+			with request.urlopen(f"{self.protocol}://{self.host}/public/subscribe/{username}") as response:
 				packet = json.loads(response.read())
 				if packet['code'] == 0:
 					result = packet['value']
