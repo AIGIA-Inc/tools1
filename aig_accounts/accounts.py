@@ -6,44 +6,14 @@ from typing import Any
 from collections.abc import MutableSequence, Sequence, Iterable
 from graphviz import Digraph
 
-def traverse(data, relations, accounts, id, depth):
-	depth = depth + 1
-	user_cursor = relations.find({'to_id': id})
-	for user_relation in user_cursor:
-		user_id = user_relation['from_id']
-		type = user_relation['type']
-		user = accounts.find_one({'user_id': user_id})
-		if user:
-			data.append({'depth': depth, 'username': user['username']})
-			traverse(data, relations, accounts, user_id, depth)
-
-
-def relation_tree(aig, rootuser):
-	data: list = []
-	if aig:
-		accounts = aig.accounts
-		if accounts:
-			relations = aig.relations
-			if relations:
-				system = accounts.find_one({'username': rootuser})
-				system_id = system['user_id']
-				data.append({'depth': 0, 'username': system['username']})
-				traverse(data, relations, accounts, system_id, 0)
-			else:
-				raise Exception("cursor error")
-		else:
-			raise Exception("collection error")
-	else:
-		raise Exception("database error")
-	return data
-
 def nickname(account):
 	result = ''
+	#account is not None  == true　真偽値でみてしまう　オブジェクトがあるかどうかを確認する
 	if account:
 		content = account['content']
 		if content:
 			result = content['nickname']
-	#
+		#
 	#
 	return result
 

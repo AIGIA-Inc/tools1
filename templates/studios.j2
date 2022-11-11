@@ -1,0 +1,32 @@
+{% extends "base.j2" %}
+{% block body %}
+	<div class="row" style="margin:20px;padding:20px">
+		<div class="col-1">
+		</div>
+		<div class="col">
+			<table class="table">
+				<thead>
+				<tr>
+					<th scope="col">studio name</th>
+					<th scope="col">name</th>
+					<th scope="col">user count</th>
+				</tr>
+				</thead>
+
+				<tbody>
+				{% for studio in studios %}
+					<tr>
+						<td>{{studio.name}}</td>
+						<td>{{studio.nickname}}</td>
+						<td>{{studio.user_count}}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		<div class="col-1">
+		</div>
+	</div>
+{% endblock %}
+{% block trailing %}
+{% endblock %}
