@@ -86,7 +86,7 @@ def connect_string(protocol, username, password, host, db):
     #return "mongodb://localhost/aig"
     return protocol + "://" + username + ":" + password + "@" + host + "/" + db
 
-@app.get('/')
+@app.get('/hoge')
 def index(request: Request, key: str = "", root: str = "admin@aigia.co.jp", layout: str = "fdp"):
     host, path, username, password = config()
     return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
@@ -425,7 +425,7 @@ def totallings(request: Request):
     host, path, username, password = config()
     return templates.TemplateResponse("totallings.j2", context={"request": request})
 
-@app.get('/studios')
+@app.get('/')
 def studio_list(request: Request):
     host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
