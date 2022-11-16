@@ -35,6 +35,8 @@ from typing import Optional
 
 import requests
 
+import pandas as pd
+
 app = FastAPI()
 
 PATH_ROOT = str(pathlib.Path(__file__).resolve().parent)
@@ -425,7 +427,18 @@ def totallings(request: Request):
     host, path, username, password = config()
     return templates.TemplateResponse("totallings.j2", context={"request": request})
 
-@app.get('/')
+"""
+def translate_username(username,translate_table):
+    for column in translate_table:
+        if column['username'] == username:
+
+
+
+
+    return nickname
+"""
+
+#@app.get('/')
 def studio_list(request: Request):
     host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
@@ -442,11 +455,9 @@ def studio_list(request: Request):
                 studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "user_count": count["user_id"]})
         return templates.TemplateResponse("studios.j2", context={"request": request, "studios":studios})
 
-def api_accounts(client,item_id):
+def api_accounts(client_studio,item_id):
     try:
-
         #target = "636b46c20e2b5ab41da72265"
-
         pipeline = [
             {'$match': { 'from_id': item_id } },
             {'$graphLookup': {
@@ -487,11 +498,108 @@ def api_accounts(client,item_id):
             {'$count': 'user_id'}
         ]
 
-        result = client.aig.relations.aggregate(pipeline)
+        result = client_studio.aig.relations.aggregate(pipeline)
     #    count = result.next()
         return result #count["user_id"]
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
+
+        #{'$unwind': {'path': '$username'}}
+
+@app.get('/')
+def user_list(request: Request):
+    host, path, username, password = config()
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net","aig?retryWrites=true&w=majority")) as client:
+
+        studios = []
+
+        accounts = client.aig.accounts
+
+        studio_cursor = accounts.find({"type": "studio"})
+        for studio in studio_cursor:
+            count_cousor = studio_users(client, studio["user_id"])
+            while True:
+                count = next(count_cousor, None)
+                if count is not None:
+                    studios.append({"name": studio["username"], "nickname": studio["content"]["nickname"],
+                                "user_count": count["username"]})
+                else:
+                    break
+
+        return templates.TemplateResponse("studios.j2", context={"request": request, "studios": studios})
+
+#userを一つ取り出してテーブルを回す
+#
+
+def studio_users(client,item_id):
+    try:
+        pipeline = [
+            {'$match': { 'from_id': item_id } },
+            {'$graphLookup': {
+                    'from': 'relations',
+                    'startWith': '$from_id',
+                    'connectFromField': 'from_id',
+                    'connectToField': 'to_id',
+                    'as': 'belongs',
+                    'maxDepth': 10,
+                    'depthField': 'depth',
+                    'restrictSearchWithMatch': {
+                        'type': 'belongs'
+                    }
+                }
+            },
+            {'$unwind': {'path': '$belongs'}},
+            {'$lookup': {
+                    'from': 'accounts',
+                    'localField': 'belongs.from_id',
+                    'foreignField': 'user_id',
+                    'as': 'account'
+                }
+            },
+            {'$unwind': {'path': '$account'}},
+            {'$addFields': {'account.depth': '$belongs.depth'}},
+            {'$replaceRoot': {'newRoot': '$account'}},
+            {'$sort': {'depth': -1}},
+            {'$match': {'type': ''}},
+            {'$project': {
+                    '_id': 0,
+                    'publickey': 0,
+                    'privatekey': 0,
+                    'secret': 0,
+                    'salt': 0,
+                    'hash': 0
+                }
+            },
+            {'$unwind': {'path': '$username'}}
+        ]
+        result = client.aig.relations.aggregate(pipeline)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=e)
+
+
+df = pd.read_csv("unified_payments.csv")
+stripe_df = pd.DataFrame(data=df)
+customer_email = stripe_df.loc[:,"Customer Email"]
+
+
+
+
+
+
+
+
+"""
+def StudioList():
+    result = []
+    for stripe_index in range(len(stripe_df)):
+        stripe_username = stripe_df.at[stripe_index, 'Customer Email']
+        result = stripe_username.append
+    return result
+
+print(StudioList())
+
+"""
 
 
 # 例外処理

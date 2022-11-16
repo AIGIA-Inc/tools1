@@ -1,10 +1,10 @@
 import pandas as pd
 
-stripe = pd.read_csv('stripe.csv')
-fromAccount = pd.read_csv('from.csv')
-relation = pd.read_csv('relation.csv')
-toAccount = pd.read_csv('to.csv')
-studio = pd.read_csv('studio.csv')
+stripe = pd.read_csv('pack/stripe.csv')
+fromAccount = pd.read_csv('pack/from.csv')
+relation = pd.read_csv('pack/relation.csv')
+toAccount = pd.read_csv('pack/to.csv')
+studio = pd.read_csv('pack/studio.csv')
 
 # 繰り返し処理
 def Inc(key, total):
@@ -39,6 +39,7 @@ def StudioList():
 
     return result
 
+print(StudioList())
 
 #スタジオごとの数をまとめる
 def Unique(studio_total):
@@ -47,7 +48,7 @@ def Unique(studio_total):
     #print(studio_total.values())
     for studio in list(studio_total.values()): #valuesでキーの値のみ取得
         Inc(studio, studio_count)
-    print(studio_count)
+    #print(studio_count)
     return studio_count
 
 
@@ -65,8 +66,9 @@ studio_total = StudioList()                 #.....
 studio_count = Unique(studio_total)         #.....
 studio_array =Transpose(studio_count)
 
-output = pd.DataFrame(data=studio_array)    #csvへ出力
-output.to_csv("count2.csv")
+#csvへ出力
+#output = pd.DataFrame(data=studio_array)
+#output.to_csv("count2.csv")
 
 
 
