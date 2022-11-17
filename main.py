@@ -35,8 +35,6 @@ from typing import Optional
 
 import requests
 
-import pandas as pd
-
 app = FastAPI()
 
 PATH_ROOT = str(pathlib.Path(__file__).resolve().parent)
@@ -589,6 +587,11 @@ def studio_users(client,item_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
 
+#stripeのcsvをDataframeに変換
+
+df = pd.read_csv("data/unified_payments.csv")
+stripe_df = pd.DataFrame(data=df)
+customer_email = stripe_df.loc[:,"Customer Email"].to_list()
 
 """
 
@@ -618,12 +621,9 @@ def user_list():
 df_user_list = pd.DataFrame.from_dict(user_list())
 #print(df_user_list)
 
+"""
 
-#stripeのcsvをDataframeに変換
-
-df = pd.read_csv("unified_payments.csv")
-stripe_df = pd.DataFrame(data=df)
-customer_email = stripe_df.loc[:,"Customer Email"].to_list()
+"""
 #print(customer_email)
 
 #print(user_list())

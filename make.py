@@ -42,6 +42,7 @@ if __name__ == "__main__":
                                         "/requirements.txt",
                                         "/config/default.json",
                                         "/static/.gitkeep",
+                                        "/data/unified_payments.csv",
                                 "/aig_accounts/__init__.py",
                                 "/aig_accounts/accounts.py",
                                 "/aig_accounts/payment.py",
