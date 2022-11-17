@@ -438,7 +438,11 @@ def translate_username(username,translate_table):
     return nickname
 """
 
-#@app.get('/')
+@app.get('/test')
+def studio_list(request: Request):
+    return templates.TemplateResponse("test.j2", context={"request": request})
+
+@app.get('/')
 def studio_list(request: Request):
     host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
@@ -449,10 +453,20 @@ def studio_list(request: Request):
 
         studio_cursor = accounts.find({"type": "studio"}) #.skip(skip).limit(limit)
         for studio in studio_cursor:
-            count_cousor = api_accounts(client, studio["user_id"])
-            count = next(count_cousor,None)
-            if count is not None:
-                studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "user_count": count["user_id"]})
+            valid_count = 0
+            all_count = 0
+            user_cousor = studio_users(client, studio["user_id"])
+            while True:
+                user = next(user_cousor,None)
+                if user is not None:
+                    all_count += 1
+                    for username in customer_email:
+                        if user["username"] == username:
+                            valid_count+=1
+                else:
+                    break
+
+            studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
         return templates.TemplateResponse("studios.j2", context={"request": request, "studios":studios})
 
 def api_accounts(client_studio,item_id):
@@ -504,9 +518,9 @@ def api_accounts(client_studio,item_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
 
-        #{'$unwind': {'path': '$username'}}
 
-@app.get('/')
+"""
+#@app.get('/')
 def user_list(request: Request):
     host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net","aig?retryWrites=true&w=majority")) as client:
@@ -527,9 +541,7 @@ def user_list(request: Request):
                     break
 
         return templates.TemplateResponse("studios.j2", context={"request": request, "studios": studios})
-
-#userを一つ取り出してテーブルを回す
-#
+"""
 
 def studio_users(client,item_id):
     try:
@@ -578,14 +590,82 @@ def studio_users(client,item_id):
         raise HTTPException(status_code=500, detail=e)
 
 
+"""
+
+#studioに結びつくuserを取り出す
+def user_list():
+    host, path, username, password = config()
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net","aig?retryWrites=true&w=majority")) as client:
+
+        studios = []
+
+        accounts = client.aig.accounts
+
+        studio_cursor = accounts.find({"type": "studio"})
+        for studio in studio_cursor:
+            count_cousor = studio_users(client, studio["user_id"])
+            while True:
+                count = next(count_cousor, None)
+                if count is not None:
+                    studios.append({"name": studio["username"], "nickname": studio["content"]["nickname"],
+                                "user_count": count["username"]})
+                else:
+                    break
+        return studios
+
+#Dataframeに変換
+
+df_user_list = pd.DataFrame.from_dict(user_list())
+#print(df_user_list)
+
+
+#stripeのcsvをDataframeに変換
+
 df = pd.read_csv("unified_payments.csv")
 stripe_df = pd.DataFrame(data=df)
-customer_email = stripe_df.loc[:,"Customer Email"]
+customer_email = stripe_df.loc[:,"Customer Email"].to_list()
+#print(customer_email)
+
+#print(user_list())
+
+#print(df_user_list["user_count"])
+#d_col = dict(zip(df_user_list["user_count"] , df_user_list["name"]))
+#print(d_col)
 
 
 
+keys = []
+
+for user in customer_email:
+    for key, value in d_col.items():
+        if value == user:
+            keys.append(key)
+
+#print(keys)
 
 
+"""
+
+#print(df_user_list["user_count"].to_list())
+#print(type(df_user_list["user_count"].to_list()))
+"""
+
+def stripe_success():
+    result = []
+
+    for count_list in df_user_list["user_count"]:
+        if count_list in customer_email:
+            result.append
+
+    return result
+
+print(stripe_success())
+
+"""
+
+
+#userを一つ取り出してテーブルを回す
+#pandas 一致するものがあればnameをカウント1する
 
 
 
@@ -610,4 +690,4 @@ def api_error_handler(request: Request, exception: HTTPException):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=5000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=5000, log_level="info")
