@@ -9,11 +9,12 @@ import json
 import pathlib
 
 from typing import Any
-from datetime import datetime
+from typing import Union
 import time
+from datetime import datetime, timedelta
 
 import uvicorn
-from bson import ObjectId
+# from bson import ObjectId
 
 from pymongo import MongoClient
 import pandas as pd
@@ -23,15 +24,23 @@ from fastapi import (
     APIRouter,
     Request
 )
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Optional
+
+from fastapi import FastAPI, HTTPException, Depends, Request,Form
+from fastapi.responses import JSONResponse
+from fastapi_jwt_auth import AuthJWT
+from fastapi_jwt_auth.exceptions import AuthJWTException
+
+# from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 import requests
 
@@ -40,11 +49,105 @@ app = FastAPI()
 PATH_ROOT = str(pathlib.Path(__file__).resolve().parent)
 PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent / "templates")
 PATH_STATIC = str(pathlib.Path(__file__).resolve().parent / "static")
+PATH_UPLOAD = str(pathlib.Path(__file__).resolve().parent / "data") + "/upload.csv"
 
 app.mount("/static", StaticFiles(directory=PATH_STATIC), name="static")
 templates = Jinja2Templates(directory=PATH_TEMPLATES)
 
 import logging
+
+import csv
+import shutil
+import pprint
+
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from typing import List
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+
+app = FastAPI()
+
+
+class User(BaseModel):
+    username: str
+    password: str
+
+class Settings(BaseModel):
+    authjwt_secret_key: str = "secret"
+    # Configure application to store and get JWT from cookies
+    authjwt_token_location: set = {"cookies"}
+    # Disable CSRF Protection for this example. default is True
+    authjwt_cookie_csrf_protect: bool = False
+
+@AuthJWT.load_config
+def get_config():
+    return Settings()
+
+#@app.exception_handler(AuthJWTException)
+#def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+#    return JSONResponse(
+#        status_code=exc.status_code,
+#        content={"detail": exc.message}
+#    )
+
+# 例外処理
+@app.exception_handler(AuthJWTException)
+def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+    return templates.TemplateResponse("error.j2", context={"request": request, "error": exc})
+
+
+@app.post('/login')
+def login(username: str = Form(""), password: str = Form(""), Authorize: AuthJWT = Depends()):
+    if username != "test" or password != "test":
+        raise HTTPException(status_code=401,detail="Bad username or password")
+
+    # Create the tokens and passing to set_access_cookies or set_refresh_cookies
+    access_token = Authorize.create_access_token(subject=username)
+    refresh_token = Authorize.create_refresh_token(subject=username)
+
+    # Set the JWT cookies in the response
+    Authorize.set_access_cookies(access_token)
+    Authorize.set_refresh_cookies(refresh_token)
+    return {"msg":"Successfully login"}
+
+@app.post('/refresh')
+def refresh(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_refresh_token_required()
+
+    current_user = Authorize.get_jwt_subject()
+    new_access_token = Authorize.create_access_token(subject=current_user)
+    # Set the JWT cookies in the response
+    Authorize.set_access_cookies(new_access_token)
+    return {"msg":"The token has been refresh"}
+
+@app.post('/logout')
+def logout(Authorize: AuthJWT = Depends()):
+    """
+    Because the JWT are stored in an httponly cookie now, we cannot
+    log the user out by simply deleting the cookies in the frontend.
+    We need the backend to send us a response to delete the cookies.
+    """
+    Authorize.jwt_required()
+
+    Authorize.unset_jwt_cookies()
+    return {"msg":"Successfully logout"}
+
+@app.get('/protected')
+def protected(Authorize: AuthJWT = Depends()):
+    """
+    We do not need to make any changes to our protected endpoints. They
+    will all still function the exact same as they do when sending the
+    JWT in via a headers instead of a cookies
+    """
+    Authorize.jwt_required()
+
+    current_user = Authorize.get_jwt_subject()
+    return {"user": current_user}
+
+
+KB = 1024
+MB = 1024 * KB
 
 
 # logger = logging.getLogger('uvicorn')
@@ -86,25 +189,11 @@ def connect_string(protocol, username, password, host, db):
     #return "mongodb://localhost/aig"
     return protocol + "://" + username + ":" + password + "@" + host + "/" + db
 
+
 @app.get('/hoge')
 def index(request: Request, key: str = "", root: str = "admin@aigia.co.jp", layout: str = "fdp"):
     host, path, username, password = config()
     return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
-
-
-"""
-@app.get('/tree')
-def tree(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
-    from aig_accounts import accounts
-    host, path, _key, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        _accounts = accounts.relation_tree(client.aig, root)
-    return templates.TemplateResponse("accounts_tree.j2",
-                                      context={"request": request, "host": host, "path": path, "key": key,
-                                               "rootuser": root, "accounts": _accounts})
-"""
-
 
 @app.get('/accounts')
 def accounts(request: Request, root: str = "admin@aigia.co.jp"):
@@ -184,14 +273,12 @@ def api_totalling( studio: str = ""):
     except Exception as e:
         raise HTTPException(status_code=403, detail=e)
 
-
 @app.get('/guest')
 def guest(request: Request, root: str = "admin@aigia.co.jp"):
     host, path, username, password = config()
     return templates.TemplateResponse("guests.j2",
                                       context={"request": request, "host": host, "path": path,
                                                "rootuser": root})
-
 
 @app.get('/api/guest')
 def api_guest(root: str = "admin@aigia.co.jp", type: str = "", skip: int = 0, limit: int = 20):
@@ -202,40 +289,6 @@ def api_guest(root: str = "admin@aigia.co.jp", type: str = "", skip: int = 0, li
                                     "aig?retryWrites=true&w=majority")) as client:
         _guests = accounts.guest(client.aig, root, type, skip, limit)
     return JSONResponse(content=_guests)
-
-
-"""
-@app.get('/validation')
-def validation(key: str = "key", root: str = "admin@aigia.co.jp"):
-    from aig_accounts import accounts
-    host, path, _key, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        data = accounts.valid_relation(client.aig, True)
-        df = pd.DataFrame(data, columns=["from", "to", "type"])
-        output = sister("validation.csv")
-        df.to_csv(output, index=False)
-    return FileResponse(path=output, media_type='text/csv', filename="validation.csv")
-
-"""
-'''
-@app.route('/graph', methods=['GET'])
-def graph(request: Request, key: str = "key", root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
-	from aig_accounts import accounts
-	if key is not None:
-		host, path, _key, username, password = config()
-		if _key == key:
-			# circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
-			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
-				output = sister("aig.svg")
-				accounts.relation_graph(client.aig, output, root, depth, layout)
-			return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
-		else:
-			raise HTTPException(status_code=403, detail="invalid key.")
-	else:
-		raise HTTPException(status_code=403, detail="no key.")
-'''
-
 
 @app.get('/shots')
 def shots(request: Request, query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
@@ -301,7 +354,6 @@ def shots(request: Request, query: Any = {}, sort: str = "platform.description.s
                                       context={"request": request, "host": host, "path": path,
                                                "shots": _shots, "columns": columns})
 
-
 @app.get('/shoting')
 def shoting(request: Request, root: str = "admin@aigia.co.jp"):
     host, path, username, password = config()
@@ -309,11 +361,9 @@ def shoting(request: Request, root: str = "admin@aigia.co.jp"):
                                       context={"request": request, "host": host, "path": path,
                                                "rootuser": root})
 
-
 class Item(BaseModel):
     key: str
     count: int = 0
-
 
 @app.post('/api/shoting')
 def shoting(item: Item):
@@ -330,10 +380,6 @@ def shoting(item: Item):
                 return JSONResponse(content={})
     except Exception as e:
         raise HTTPException(status_code=403, detail=e)
-
-
-# raise HTTPException(status_code=403, detail="no key.")
-
 
 @app.get('/stream/shots')
 def stream_shots(query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
@@ -396,7 +442,6 @@ def stream_shots(query: Any = {}, sort: str = "platform.description.score", skip
                                     "aig?retryWrites=true&w=majority")) as client:
         return StreamingResponse(shots.generate_shots(client.aig, query, skip, limit, sort, columns))
 
-
 @app.get('/download/graph')
 def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
     # from aig_accounts import download_accounts
@@ -419,36 +464,28 @@ def usernames(type: str = "", skip: int = 0, limit: int = 20):
         users = accounts.user_by_type(client.aig, type, skip, limit)
     return JSONResponse(content=users)
 
-
 @app.get('/totallings', response_class=HTMLResponse)
 def totallings(request: Request):
     host, path, username, password = config()
     return templates.TemplateResponse("totallings.j2", context={"request": request})
 
-"""
-def translate_username(username,translate_table):
-    for column in translate_table:
-        if column['username'] == username:
-
-
-
-
-    return nickname
-"""
-
 @app.get('/test')
 def studio_list(request: Request):
     return templates.TemplateResponse("test.j2", context={"request": request})
 
+@app.get('/auth')
+def auth(request: Request):
+    return templates.TemplateResponse("auth.j2", context={"request": request})
+
 @app.get('/')
-def studio_list(request: Request):
+def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+    studios = []
+
+    Authorize.jwt_required()
+
     host, path, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        studios = []
-
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
         accounts = client.aig.accounts
-
         studio_cursor = accounts.find({"type": "studio"}) #.skip(skip).limit(limit)
         for studio in studio_cursor:
             valid_count = 0
@@ -465,7 +502,7 @@ def studio_list(request: Request):
                     break
 
             studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
-        return templates.TemplateResponse("studios.j2", context={"request": request, "studios":studios})
+    return templates.TemplateResponse("studios.j2", context={"request": request, "studios":studios})
 
 def api_accounts(client_studio,item_id):
     try:
@@ -516,31 +553,6 @@ def api_accounts(client_studio,item_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
 
-
-"""
-#@app.get('/')
-def user_list(request: Request):
-    host, path, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net","aig?retryWrites=true&w=majority")) as client:
-
-        studios = []
-
-        accounts = client.aig.accounts
-
-        studio_cursor = accounts.find({"type": "studio"})
-        for studio in studio_cursor:
-            count_cousor = studio_users(client, studio["user_id"])
-            while True:
-                count = next(count_cousor, None)
-                if count is not None:
-                    studios.append({"name": studio["username"], "nickname": studio["content"]["nickname"],
-                                "user_count": count["username"]})
-                else:
-                    break
-
-        return templates.TemplateResponse("studios.j2", context={"request": request, "studios": studios})
-"""
-
 def studio_users(client,item_id):
     try:
         pipeline = [
@@ -589,9 +601,126 @@ def studio_users(client,item_id):
 
 #stripeのcsvをDataframeに変換
 
-df = pd.read_csv("data/unified_payments.csv")
+df = pd.read_csv("data/upload.csv")
 stripe_df = pd.DataFrame(data=df)
 customer_email = stripe_df.loc[:,"Customer Email"].to_list()
+
+@app.post("/upload/")
+def upload_file(upload_file: UploadFile = File(...)):
+    # ファイルサイズ検証
+    upload_file.file.seek(0, 2)  # シークしてサイズ検証
+    file_size = upload_file.file.tell()
+    if file_size > 20 * MB:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="アップロードファイルは20MB制限です",
+        )
+    else:
+        upload_file.file.seek(0)  # シークを戻す
+
+    tmp_path: Path = ""
+    try:
+        suffix = Path(upload_file.filename).suffix
+        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(upload_file.file, tmp)
+            tmp_path = Path(tmp.name)
+            print(tmp_path)
+    except Exception as e:
+        print(f"一時ファイル作成: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="一時ファイル作成できません",
+        )
+    finally:
+        upload_file.file.close()
+
+    shutil.move(tmp_path, PATH_UPLOAD)
+
+    return {"message": "アップロード完了"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=5000, log_level="info")
+
+
+"""
+@app.get('/tree')
+def tree(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
+    from aig_accounts import accounts
+    host, path, _key, username, password = config()
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
+                                    "aig?retryWrites=true&w=majority")) as client:
+        _accounts = accounts.relation_tree(client.aig, root)
+    return templates.TemplateResponse("accounts_tree.j2",
+                                      context={"request": request, "host": host, "path": path, "key": key,
+                                               "rootuser": root, "accounts": _accounts})
+"""
+
+"""
+@app.get('/validation')
+def validation(key: str = "key", root: str = "admin@aigia.co.jp"):
+    from aig_accounts import accounts
+    host, path, _key, username, password = config()
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
+                                    "aig?retryWrites=true&w=majority")) as client:
+        data = accounts.valid_relation(client.aig, True)
+        df = pd.DataFrame(data, columns=["from", "to", "type"])
+        output = sister("validation.csv")
+        df.to_csv(output, index=False)
+    return FileResponse(path=output, media_type='text/csv', filename="validation.csv")
+
+"""
+'''
+@app.route('/graph', methods=['GET'])
+def graph(request: Request, key: str = "key", root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
+	from aig_accounts import accounts
+	if key is not None:
+		host, path, _key, username, password = config()
+		if _key == key:
+			# circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
+			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
+				output = sister("aig.svg")
+				accounts.relation_graph(client.aig, output, root, depth, layout)
+			return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
+		else:
+			raise HTTPException(status_code=403, detail="invalid key.")
+	else:
+		raise HTTPException(status_code=403, detail="no key.")
+'''
+
+"""
+def translate_username(username,translate_table):
+    for column in translate_table:
+        if column['username'] == username:
+
+
+
+
+    return nickname
+"""
+
+"""
+#@app.get('/')
+def user_list(request: Request):
+    host, path, username, password = config()
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net","aig?retryWrites=true&w=majority")) as client:
+
+        studios = []
+
+        accounts = client.aig.accounts
+
+        studio_cursor = accounts.find({"type": "studio"})
+        for studio in studio_cursor:
+            count_cousor = studio_users(client, studio["user_id"])
+            while True:
+                count = next(count_cousor, None)
+                if count is not None:
+                    studios.append({"name": studio["username"], "nickname": studio["content"]["nickname"],
+                                "user_count": count["username"]})
+                else:
+                    break
+
+        return templates.TemplateResponse("studios.j2", context={"request": request, "studios": studios})
+"""
 
 """
 
@@ -681,13 +810,3 @@ print(StudioList())
 
 """
 
-
-# 例外処理
-@app.exception_handler(HTTPException)
-def api_error_handler(request: Request, exception: HTTPException):
-    host, path, username, password = config()
-    return templates.TemplateResponse("error.j2", context={"request": request, "error": exception})
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5000, log_level="info")
