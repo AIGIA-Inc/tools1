@@ -31,6 +31,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
+from fastapi.responses import RedirectResponse
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -110,6 +111,7 @@ def login(username: str = Form(""), password: str = Form(""), Authorize: AuthJWT
     Authorize.set_access_cookies(access_token)
     Authorize.set_refresh_cookies(refresh_token)
     return {"msg":"Successfully login"}
+    # return RedirectResponse('/')
 
 @app.post('/refresh')
 def refresh(Authorize: AuthJWT = Depends()):
