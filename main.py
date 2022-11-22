@@ -484,6 +484,11 @@ def auth(request: Request):
 
 @app.get('/main')
 def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+
+    df = pd.read_csv("data/upload.csv")
+    stripe_df = pd.DataFrame(data=df)
+    customer_email = stripe_df.loc[:, "Customer Email"].to_list()
+
     studios = []
     Authorize.jwt_required()
     host, path, username, password = config()
@@ -606,9 +611,7 @@ def studio_users(client,item_id):
 
 #stripeのcsvをDataframeに変換
 
-df = pd.read_csv("data/upload.csv")
-stripe_df = pd.DataFrame(data=df)
-customer_email = stripe_df.loc[:,"Customer Email"].to_list()
+
 
 @app.post("/upload/")
 def upload_file(upload_file: UploadFile = File(...)):
