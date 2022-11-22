@@ -3,7 +3,7 @@
 	<div class="row" style="margin:20px;padding:20px">
 		<div class="col-1">
 		</div>
-		<div class="col">
+		<div class="col" id="studios">
 			<table class="table">
 				<thead>
 				<tr>
@@ -15,14 +15,14 @@
 				</thead>
 
 				<tbody>
-				{% for studio in studios %}
-					<tr>
-						<td>{{studio.name}}</td>
-						<td>{{studio.nickname}}</td>
-						<td>{{studio.valid_count}}</td>
-						<td>{{studio.all_count}}</td>
+
+					<tr v-for="studio in items" >
+						<td>[[studio.name]]</td>
+						<td>[[studio.nickname]]</td>
+						<td>[[studio.valid_count]]</td>
+						<td>[[studio.all_count]]</td>
 					</tr>
-				{% endfor %}
+
 				</tbody>
 			</table>
 		</div>
@@ -31,4 +31,30 @@
 	</div>
 {% endblock %}
 {% block trailing %}
+<script>
+	new Vue({
+		el: "#studios",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				protocol: "http:",
+				host: "localhost:5000",
+				items: []
+			}
+		},
+		methods: {
+            get: function () {
+                axios.get(this.protocol + '//' + this.host + '/api/studios')
+                    .then((response) => {
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+		},
+		mounted() {
+            this.get();
+		}
+	})
+</script>
 {% endblock %}

@@ -514,6 +514,38 @@ def studio_list(request: Request, Authorize: AuthJWT = Depends()):
             studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
     return templates.TemplateResponse("studios.j2", context={"request": request, "studios":studios})
 
+@app.get('/api/studios')
+def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+
+    df = pd.read_csv("data/upload.csv")
+    stripe_df = pd.DataFrame(data=df)
+    customer_email = stripe_df.loc[:, "Customer Email"].to_list()
+
+    studios = []
+    Authorize.jwt_required()
+    host, path, username, password = config()
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
+        accounts = client.aig.accounts
+        studio_cursor = accounts.find({"type": "studio"}) #.skip(skip).limit(limit)
+        for studio in studio_cursor:
+            valid_count = 0
+            all_count = 0
+            user_cousor = studio_users(client, studio["user_id"])
+            try:
+                while True:
+                    user = next(user_cousor,None)
+                    if user is not None:
+                        all_count += 1
+                        for username in customer_email:
+                            if user["username"] == username:
+                                valid_count+=1
+                    else:
+                        break
+            except Exception as e:
+                print(e)
+            studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
+    return JSONResponse(content=studios)
+
 def api_accounts(client_studio,item_id):
     try:
         #target = "636b46c20e2b5ab41da72265"
