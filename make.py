@@ -34,7 +34,8 @@ if __name__ == "__main__":
                                      "/product/static",
                                      "/product/aig_accounts",
                                      "/product/aig_shots",
-                                     "/product/config"
+                                     "/product/config",
+                                     "/product/data"
                                      ])))
     pprint.pprint(list(map(build_file, ["/main.py",
                                         "/setup.py",
@@ -42,7 +43,7 @@ if __name__ == "__main__":
                                         "/requirements.txt",
                                         "/config/default.json",
                                         "/static/.gitkeep",
-                                        "/data/unified_payments.csv",
+                                        "/data/upload.csv",
                                 "/aig_accounts/__init__.py",
                                 "/aig_accounts/accounts.py",
                                 "/aig_accounts/payment.py",
@@ -51,6 +52,7 @@ if __name__ == "__main__":
                                 "/aig_shots/download_shots.py",
                                 "/templates/accounts.j2",
                                 "/templates/accounts_tree.j2",
+                                "/templates/auth.j2",
                                 "/templates/base.j2",
                                 "/templates/error.j2",
                                 "/templates/guests.j2",

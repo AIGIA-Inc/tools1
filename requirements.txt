@@ -104,6 +104,7 @@ pydotplus==2.0.2
 Pygments==2.11.2
 PyJWT==1.7.1
 pymongo==3.12.1
+pyOpenSSL==22.1.0
 pyparsing==3.0.9
 PyQt5-sip==12.9.0
 pyrsistent==0.18.1

@@ -99,9 +99,9 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 
 
 @app.post('/login')
-def login(username: str = Form(""), password: str = Form(""), Authorize: AuthJWT = Depends()):
+def login(request: Request, username: str = Form(""), password: str = Form(""), Authorize: AuthJWT = Depends()):
     if username != "test" or password != "test":
-        raise HTTPException(status_code=401,detail="Bad username or password")
+        raise HTTPException(status_code=401,detail="Bad username or password!")
 
     # Create the tokens and passing to set_access_cookies or set_refresh_cookies
     access_token = Authorize.create_access_token(subject=username)
@@ -110,6 +110,8 @@ def login(username: str = Form(""), password: str = Form(""), Authorize: AuthJWT
     # Set the JWT cookies in the response
     Authorize.set_access_cookies(access_token)
     Authorize.set_refresh_cookies(refresh_token)
+
+    #return templates.TemplateResponse("logged_in.j2", context={"request": request})
     return {"msg":"Successfully login"}
     # return RedirectResponse('/')
 
@@ -124,7 +126,7 @@ def refresh(Authorize: AuthJWT = Depends()):
     return {"msg":"The token has been refresh"}
 
 @app.post('/logout')
-def logout(Authorize: AuthJWT = Depends()):
+def logout(request: Request, Authorize: AuthJWT = Depends()):
     """
     Because the JWT are stored in an httponly cookie now, we cannot
     log the user out by simply deleting the cookies in the frontend.
@@ -134,6 +136,7 @@ def logout(Authorize: AuthJWT = Depends()):
 
     Authorize.unset_jwt_cookies()
     return {"msg":"Successfully logout"}
+    # return templates.TemplateResponse("auth.j2", context={"request": request})
 
 @app.get('/protected')
 def protected(Authorize: AuthJWT = Depends()):
@@ -475,16 +478,14 @@ def totallings(request: Request):
 def studio_list(request: Request):
     return templates.TemplateResponse("test.j2", context={"request": request})
 
-@app.get('/auth')
+@app.get('/')
 def auth(request: Request):
     return templates.TemplateResponse("auth.j2", context={"request": request})
 
-@app.get('/')
+@app.get('/main')
 def studio_list(request: Request, Authorize: AuthJWT = Depends()):
     studios = []
-
     Authorize.jwt_required()
-
     host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
         accounts = client.aig.accounts
@@ -493,16 +494,18 @@ def studio_list(request: Request, Authorize: AuthJWT = Depends()):
             valid_count = 0
             all_count = 0
             user_cousor = studio_users(client, studio["user_id"])
-            while True:
-                user = next(user_cousor,None)
-                if user is not None:
-                    all_count += 1
-                    for username in customer_email:
-                        if user["username"] == username:
-                            valid_count+=1
-                else:
-                    break
-
+            try:
+                while True:
+                    user = next(user_cousor,None)
+                    if user is not None:
+                        all_count += 1
+                        for username in customer_email:
+                            if user["username"] == username:
+                                valid_count+=1
+                    else:
+                        break
+            except Exception as e:
+                print(e)
             studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
     return templates.TemplateResponse("studios.j2", context={"request": request, "studios":studios})
 
