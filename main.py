@@ -99,20 +99,20 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 
 
 @app.post('/login')
-def login(request: Request, username: str = Form(""), password: str = Form(""), Authorize: AuthJWT = Depends()):
-    if username != "test" or password != "test":
-        raise HTTPException(status_code=401,detail="Bad username or password!")
+def login(user: User, Authorize: AuthJWT = Depends()):
+    result = {"code": -1,"message": "user not found or invalid password."}
+    if user.username == "test" and user.password == "test":
+        # Create the tokens and passing to set_access_cookies or set_refresh_cookies
+        access_token = Authorize.create_access_token(subject=user.username)
+        refresh_token = Authorize.create_refresh_token(subject=user.username)
 
-    # Create the tokens and passing to set_access_cookies or set_refresh_cookies
-    access_token = Authorize.create_access_token(subject=username)
-    refresh_token = Authorize.create_refresh_token(subject=username)
+        # Set the JWT cookies in the response
+        Authorize.set_access_cookies(access_token)
+        Authorize.set_refresh_cookies(refresh_token)
 
-    # Set the JWT cookies in the response
-    Authorize.set_access_cookies(access_token)
-    Authorize.set_refresh_cookies(refresh_token)
-
-    #return templates.TemplateResponse("logged_in.j2", context={"request": request})
-    return {"msg":"Successfully login"}
+        #return templates.TemplateResponse("logged_in.j2", context={"request": request})
+        result = {"code": 0,"message": "login success."}
+    return result
     # return RedirectResponse('/')
 
 @app.post('/refresh')

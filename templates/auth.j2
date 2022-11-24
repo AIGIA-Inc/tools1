@@ -2,7 +2,8 @@
 {% block body %}
 <div class="container">
   <div class="row">
-    <form action="/login" method="POST">
+    <form id="login">
+	    <button type="button" class="btn btn-primary" v-on:click="login">Login</button>
         <div class="col-6">
       	    <div class="input-group">
                 <input type="text" name="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
@@ -13,10 +14,35 @@
                 <input type="text" name="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1">
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">login</button>
     </form>
   </div>
 </div>
 {% endblock %}
 {% block trailing %}
+<script>
+	new Vue({
+		el: "#login",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				protocol: "http:",
+				host: "localhost:5000",
+				items: []
+			}
+		},
+		methods: {
+            login: function () {
+                axios.post(this.protocol + '//' + this.host + '/login' ,{username:"test", password: "test"})
+                    .then((response) => {
+                       if (response.data.code === 0) {
+                         window.location.href = 'http://localhost:5000/main';
+                       } else {
+                       }
+                    }).catch((e) => {
+
+                })
+            },
+		}
+	})
+</script>
 {% endblock %}
