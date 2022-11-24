@@ -17,7 +17,7 @@
 <div id="app" class="container-fluid" style="padding:0">
 	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 		<div class="container-fluid">
-			<a class="navbar-brand" href="#">AIG Report  {{host}}</a>
+			<a class="navbar-brand" href="#">AIG Report  </a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
 					aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
@@ -84,6 +84,8 @@
 {% block trailing %}
 {% endblock %}
 	<script>
+
+
 	new Vue({
 		el: "#app",
 		delimiters: ["[[", "]]"],
@@ -91,17 +93,17 @@
 			return {
 				username:"",
 				password:"",
-				protocol: "http:",
-				host: "localhost:5000",
+
+
 				items: []
 			}
 		},
 		methods: {
 			login: function () {
-                axios.post(this.protocol + '//' + this.host + '/login', {username:this.username, password:this.password})
+                axios.post('/login', {username:this.username, password:this.password})
                     .then((response) => {
                        if (response.data.code === 0) {
-                         window.location.href = 'http://localhost:5000/main';
+                         window.location.href = '/main';
                        } else {
                        }
                     }).catch((e) => {
@@ -109,10 +111,10 @@
                 })
             },
             logout: function () {
-                axios.post(this.protocol + '//' + this.host + '/logout')
+                axios.post('/logout')
                     .then((response) => {
                      if (response.data.code === 0) {
-                       window.location.href = 'http://localhost:5000';
+                       window.location.href = '/';
                        } else {
                        }
                     }).catch((e) => {
@@ -120,7 +122,7 @@
                 })
             },
             get: function () {
-                axios.get(this.protocol + '//' + this.host + '/api/studios')
+                axios.get( '/api/studios')
                     .then((response) => {
                         this.items = response.data;
                     }).catch((e) => {
