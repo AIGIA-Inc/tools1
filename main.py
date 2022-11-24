@@ -101,7 +101,7 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 @app.post('/login')
 def login(user: User, Authorize: AuthJWT = Depends()):
     result = {"code": -1,"message": "user not found or invalid password."}
-    if user.username == "test" and user.password == "test":
+    if user.username == "aigia" and user.password == "1terabyte":
         # Create the tokens and passing to set_access_cookies or set_refresh_cookies
         access_token = Authorize.create_access_token(subject=user.username)
         refresh_token = Authorize.create_refresh_token(subject=user.username)
@@ -125,6 +125,8 @@ def refresh(Authorize: AuthJWT = Depends()):
     Authorize.set_access_cookies(new_access_token)
     return {"msg":"The token has been refresh"}
 
+
+
 @app.post('/logout')
 def logout(request: Request, Authorize: AuthJWT = Depends()):
     """
@@ -133,9 +135,9 @@ def logout(request: Request, Authorize: AuthJWT = Depends()):
     We need the backend to send us a response to delete the cookies.
     """
     Authorize.jwt_required()
-
     Authorize.unset_jwt_cookies()
-    return {"msg":"Successfully logout"}
+    result = {"code": 0,"message": "logout success."}
+    return result
     # return templates.TemplateResponse("auth.j2", context={"request": request})
 
 @app.get('/protected')

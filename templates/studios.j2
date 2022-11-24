@@ -3,7 +3,7 @@
 	<div class="row" style="margin:20px;padding:20px">
 		<div class="col-1">
 		</div>
-		<div class="col" id="studios">
+		<div class="col">
 			<table class="table">
 				<thead>
 				<tr>
@@ -31,30 +31,4 @@
 	</div>
 {% endblock %}
 {% block trailing %}
-<script>
-	new Vue({
-		el: "#studios",
-		delimiters: ["[[", "]]"],
-		data: () => {
-			return {
-				protocol: "http:",
-				host: "localhost:5000",
-				items: []
-			}
-		},
-		methods: {
-            get: function () {
-                axios.get(this.protocol + '//' + this.host + '/api/studios')
-                    .then((response) => {
-                        this.items = response.data;
-                    }).catch((e) => {
-                    console.log(e);
-                })
-            },
-		},
-		mounted() {
-            this.get();
-		}
-	})
-</script>
 {% endblock %}

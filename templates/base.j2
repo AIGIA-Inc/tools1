@@ -55,7 +55,6 @@
 							<li><a class="dropdown-item" href="{{path}}/download/validation?root={{rootuser}}">validation</a></li>
 							<li><a class="dropdown-item" href="{{path}}/download/graph?root={{rootuser}}">graph</a></li>
                             <li><a class="dropdown-item" href="{{path}}/download/shots">shots</a></li>
-
 						</ul>
 					</li>  -->
 					<li class="nav-item dropdown">
@@ -72,13 +71,9 @@
 							<li><a class="dropdown-item" href="{{path}}/hoge?layout=twopi">twopi</a></li>
 						</ul>
 					</li>
-
 					<li>
-					    <form action="/logout" method="POST">
-        					<button type="submit" class="btn btn-primary">logout</button>
-    					</form>
+					    <button type="button" class="btn btn-primary" v-on:click="logout">Logout</button>
 					</li>
-
 				</ul>
 			</li>
 		</div>
@@ -88,5 +83,56 @@
 </div>
 {% block trailing %}
 {% endblock %}
+	<script>
+	new Vue({
+		el: "#app",
+		delimiters: ["[[", "]]"],
+		data: () => {
+			return {
+				username:"",
+				password:"",
+				protocol: "http:",
+				host: "localhost:5000",
+				items: []
+			}
+		},
+		methods: {
+			login: function () {
+                axios.post(this.protocol + '//' + this.host + '/login', {username:this.username, password:this.password})
+                    .then((response) => {
+                       if (response.data.code === 0) {
+                         window.location.href = 'http://localhost:5000/main';
+                       } else {
+                       }
+                    }).catch((e) => {
+
+                })
+            },
+            logout: function () {
+                axios.post(this.protocol + '//' + this.host + '/logout')
+                    .then((response) => {
+                     if (response.data.code === 0) {
+                       window.location.href = 'http://localhost:5000';
+                       } else {
+                       }
+                    }).catch((e) => {
+
+                })
+            },
+            get: function () {
+                axios.get(this.protocol + '//' + this.host + '/api/studios')
+                    .then((response) => {
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+
+		},
+		mounted() {
+            this.get();
+		}
+	})
+</script>
 </body>
 </html>
