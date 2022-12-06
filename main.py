@@ -519,6 +519,9 @@ def studio_list(request: Request, Authorize: AuthJWT = Depends()):
             except Exception as e:
                 print(e)
             studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
+        total_valid = sum([i['valid_count'] for i in studios])
+        total_all = sum([i['all_count'] for i in studios])
+        studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
     return JSONResponse(content=studios)
 
 def api_accounts(client_studio,item_id):
@@ -598,7 +601,6 @@ def studio_users(client,item_id):
             {'$addFields': {'account.depth': '$belongs.depth'}},
             {'$replaceRoot': {'newRoot': '$account'}},
             {'$sort': {'depth': -1}},
-            {'$match': {'type': ''}},
             {'$project': {
                     '_id': 0,
                     'publickey': 0,
