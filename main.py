@@ -8,6 +8,8 @@ import os
 import json
 import pathlib
 
+from functools import cmp_to_key
+
 from typing import Any
 from typing import Union
 import time
@@ -68,7 +70,6 @@ from typing import List
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 app = FastAPI()
-
 
 class User(BaseModel):
     username: str
@@ -489,8 +490,11 @@ def studio_list(request: Request, Authorize: AuthJWT = Depends()):
 
     return templates.TemplateResponse("studios.j2", context={"request": request})
 
-@app.get('/api/studios')
-def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+@app.get('/api/studios/{sort_field}/{sort_order_param}')
+# def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+def studio_list(sort_field, sort_order_param, Authorize: AuthJWT = Depends()):
+
+    sort_order = sort_order_param == "True"
 
     df = pd.read_csv("data/upload.csv")
     stripe_df = pd.DataFrame(data=df)
@@ -501,7 +505,7 @@ def studio_list(request: Request, Authorize: AuthJWT = Depends()):
     host, path, username, password = config()
     with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
         accounts = client.aig.accounts
-        studio_cursor = accounts.find({"type": "studio"}) #.skip(skip).limit(limit)
+        studio_cursor = accounts.find({"type": "studio"}, sort=[('username',1)]) #.skip(skip).limit(limit)
         for studio in studio_cursor:
             valid_count = 0
             all_count = 0
@@ -519,9 +523,13 @@ def studio_list(request: Request, Authorize: AuthJWT = Depends()):
             except Exception as e:
                 print(e)
             studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
-        total_valid = sum([i['valid_count'] for i in studios])
-        total_all = sum([i['all_count'] for i in studios])
-        studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
+
+    studios = sorted(studios, key=lambda item: item[sort_field], reverse=sort_order)
+
+    total_valid = sum([i['valid_count'] for i in studios])
+    total_all = sum([i['all_count'] for i in studios])
+    studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
+
     return JSONResponse(content=studios)
 
 def api_accounts(client_studio,item_id):

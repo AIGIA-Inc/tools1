@@ -93,8 +93,7 @@
 			return {
 				username:"",
 				password:"",
-
-
+                sort_order: "True",
 				items: []
 			}
 		},
@@ -122,7 +121,7 @@
                 })
             },
             get: function () {
-                axios.get( '/api/studios')
+                axios.get('/api/studios/name/True')
                     .then((response) => {
                         this.items = response.data;
                     }).catch((e) => {
@@ -130,6 +129,54 @@
                 })
             },
 
+
+
+
+
+
+
+
+
+
+
+
+
+            name: function () {
+                axios.get('/api/studios/name/' + this.sort_order)
+                    .then((response) => {
+                     if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+			nickname: function () {
+                axios.get('/api/studios/nickname/' + this.sort_order)
+                    .then((response) => {
+                        if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+			valid_count: function () {
+                axios.get('/api/studios/valid_count/' + this.sort_order)
+                    .then((response) => {
+                        if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+			all_count: function () {
+                axios.get('/api/studios/all_count/' + this.sort_order)
+                    .then((response) => {
+                        if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
 		},
 		mounted() {
             this.get();
