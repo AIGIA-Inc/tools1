@@ -14,7 +14,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
 		crossorigin="anonymous"></script>
-<div id="app" class="container-fluid" style="padding:0">
+<div id="app" class="container-fluid" style="padding:0; height:100%">
 	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 		<div class="container-fluid">
 			<a class="navbar-brand" href="#">AIG Report  </a>
@@ -128,19 +128,6 @@
                     console.log(e);
                 })
             },
-
-
-
-
-
-
-
-
-
-
-
-
-
             name: function () {
                 axios.get('/api/studios/name/' + this.sort_order)
                     .then((response) => {
