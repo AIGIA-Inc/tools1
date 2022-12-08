@@ -330,52 +330,56 @@ def auth(request: Request):
 
 #直す
 @app.get('/api/studios/{sort_field}/{sort_order_param}')
-# def studio_list(request: Request, Authorize: AuthJWT = Depends()):
 def studio_list(sort_field, sort_order_param, Authorize: AuthJWT = Depends()):
 
     sort_order = sort_order_param == "True"
 
-    df = pd.read_csv("data/upload.csv")
-    stripe_df = pd.DataFrame(data=df)
-    customer_email = stripe_df.loc[:, "Customer Email"].to_list()
-
+    code = -2
     studios = []
-    Authorize.jwt_required()
-    host, path, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
-        accounts = client.aig.accounts
-        studio_cursor = accounts.find({"type": "studio"}, sort=[('username',1)]) #.skip(skip).limit(limit)
-        for studio in studio_cursor:
-            valid_count = 0
-            all_count = 0
-            user_cousor = studio_users(client, studio["user_id"])
-            try:
-                while True:
-                    user = next(user_cousor,None)
-                    if user is not None:
-                        all_count += 1
-                        for username in customer_email:
-                            if user["username"] == username:
-                                valid_count+=1
-                    else:
-                        break
-            except Exception as e:
-                print(e)
-            studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
+    message= ""
+    try:
+        Authorize.jwt_required()
+        host, path, username, password = config()
+        usernames = stripe_data("data/upload.csv")
+        with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
+            if client:
+                aig = client.aig
+                if aig:
+                    accounts = client.aig.accounts
+                    studio_cursor = accounts.find({"type": "studio"}, sort=[('username',1)]) #.skip(skip).limit(limit)
+                    for studio in studio_cursor:
+                        valid_count = 0
+                        all_count = 0
+                        user_cousor = studio_users(client, studio["user_id"])
+                        try:
+                            while True:
+                                user = next(user_cousor,None)
+                                if user is not None:
+                                    all_count += 1
+                                    if len(usernames) > 0:
+                                        for username in usernames:
+                                            if user["username"] == username:
+                                                valid_count+=1
+                                    else:
+                                        code = -1
+                                        message = "dataフォルダーにupload.csvが入っていません."
+                                else:
+                                    break
+                        except Exception as e:
+                            error(e.message)
 
-    studios = sorted(studios, key=lambda item: item[sort_field], reverse=sort_order)
+                        studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
 
-    total_valid = sum([i['valid_count'] for i in studios])
-    total_all = sum([i['all_count'] for i in studios])
-    studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
+        studios = sorted(studios, key=lambda item: item[sort_field], reverse=sort_order)
 
-    return JSONResponse(content=studios)
+        total_valid = sum([i['valid_count'] for i in studios])
+        total_all = sum([i['all_count'] for i in studios])
+        studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
 
-#直す
-@app.get('/main')
-def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+        return JSONResponse(content=studios)
+    except Exception as e:
+        error(e.message)
 
-    return templates.TemplateResponse("studios.j2", context={"request": request})
 
 
 if __name__ == "__main__":
