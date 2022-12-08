@@ -323,12 +323,14 @@ def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: 
         accounts.relation_graph(client.aig, output, root, depth, layout)
     return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
 
-#直す
 @app.get('/')
 def auth(request: Request):
-    return templates.TemplateResponse("auth.j2", context={"request": request})
+    try:
+        return templates.TemplateResponse("base.j2", context={"request": request})
+    except Exception as e:
+        error("auth")
 
-#直す
+
 @app.get('/api/studios/{sort_field}/{sort_order_param}')
 def studio_list(sort_field, sort_order_param, Authorize: AuthJWT = Depends()):
 
