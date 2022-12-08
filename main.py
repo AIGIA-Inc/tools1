@@ -7,45 +7,29 @@
 import os
 import json
 import pathlib
-
-from functools import cmp_to_key
-
-from typing import Any
-from typing import Union
-import time
-from datetime import datetime, timedelta
-
-import uvicorn
-# from bson import ObjectId
-
-from pymongo import MongoClient
 import pandas as pd
+import uvicorn
+import shutil
 
-from fastapi import (
-    FastAPI,
-    APIRouter,
-    Request
-)
-from fastapi import FastAPI, HTTPException, Depends, status
+
+from datetime import datetime
+from pymongo import MongoClient
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse
-from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
-from fastapi.responses import RedirectResponse
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-
-from fastapi import FastAPI, HTTPException, Depends, Request,Form
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from fastapi import Depends, File, HTTPException, UploadFile, status
 
-# from jose import JWTError, jwt
-from passlib.context import CryptContext
-
-import requests
+logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 app = FastAPI()
 
@@ -57,19 +41,14 @@ PATH_UPLOAD = str(pathlib.Path(__file__).resolve().parent / "data") + "/upload.c
 app.mount("/static", StaticFiles(directory=PATH_STATIC), name="static")
 templates = Jinja2Templates(directory=PATH_TEMPLATES)
 
-import logging
+def debug(message):
+    logger.debug(message, stacklevel=2)
 
-import csv
-import shutil
-import pprint
+def info(message):
+    logger.info(message, stacklevel=2)
 
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-from typing import List
-
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-
-app = FastAPI()
+def error(message):
+    logger.error(message, stacklevel=2)
 
 class User(BaseModel):
     username: str
@@ -86,13 +65,6 @@ class Settings(BaseModel):
 def get_config():
     return Settings()
 
-#@app.exception_handler(AuthJWTException)
-#def authjwt_exception_handler(request: Request, exc: AuthJWTException):
-#    return JSONResponse(
-#        status_code=exc.status_code,
-#        content={"detail": exc.message}
-#    )
-
 # 例外処理
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
@@ -101,20 +73,23 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 
 @app.post('/login')
 def login(user: User, Authorize: AuthJWT = Depends()):
-    result = {"code": -1,"message": "user not found or invalid password."}
-    if user.username == "aigia" and user.password == "1terabyte":
-        # Create the tokens and passing to set_access_cookies or set_refresh_cookies
-        access_token = Authorize.create_access_token(subject=user.username)
-        refresh_token = Authorize.create_refresh_token(subject=user.username)
+    try:
+        if user.username == "aigia" and user.password == "1terabyte":
+            # Create the tokens and passing to set_access_cookies or set_refresh_cookies
+            access_token = Authorize.create_access_token(subject=user.username)
+            refresh_token = Authorize.create_refresh_token(subject=user.username)
 
-        # Set the JWT cookies in the response
-        Authorize.set_access_cookies(access_token)
-        Authorize.set_refresh_cookies(refresh_token)
+            # Set the JWT cookies in the response
+            Authorize.set_access_cookies(access_token)
+            Authorize.set_refresh_cookies(refresh_token)
 
-        #return templates.TemplateResponse("logged_in.j2", context={"request": request})
-        result = {"code": 0,"message": "login success."}
-    return result
-    # return RedirectResponse('/')
+            #return templates.TemplateResponse("logged_in.j2", context={"request": request})
+            result = {"code": 0,"message": "login success."}
+        else:
+            result  ={"code": -1,"message": "user not found or invalid password "}
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=403, detail=e)
 
 @app.post('/refresh')
 def refresh(Authorize: AuthJWT = Depends()):
@@ -256,199 +231,12 @@ def api_accounts(skip: int = 0, category: str = ""):
         raise HTTPException(status_code=500, detail=e)
 
 
-@app.get('/totalling')
-def totalling(request: Request, root: str = "admin@aigia.co.jp", studio: str = ""):
-    host, path, username, password = config()
-    try:
-        return templates.TemplateResponse("totalling.j2",
-                                          context={"request": request, "host": host, "path": path,
-                                                   "rootuser": root, "studio": studio})
-    except Exception as e:
-        raise HTTPException(status_code=403, detail=e)
 
 
-@app.get('/api/totalling')
-def api_totalling( studio: str = ""):
-    from aig_accounts import accounts, payment
-    host, path, username, password = config()
-    try:
-        stripeconfig = stripe_config()
-        stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-        with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                        "aig?retryWrites=true&w=majority")) as client:
-            result = accounts.totalling(client.aig, studio, stripe)
-        return JSONResponse(content=result)
-    except Exception as e:
-        raise HTTPException(status_code=403, detail=e)
-
-@app.get('/guest')
-def guest(request: Request, root: str = "admin@aigia.co.jp"):
-    host, path, username, password = config()
-    return templates.TemplateResponse("guests.j2",
-                                      context={"request": request, "host": host, "path": path,
-                                               "rootuser": root})
-
-@app.get('/api/guest')
-def api_guest(root: str = "admin@aigia.co.jp", type: str = "", skip: int = 0, limit: int = 20):
-    from aig_accounts import accounts
-    host, path, username, password = config()
-    _guests = []
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        _guests = accounts.guest(client.aig, root, type, skip, limit)
-    return JSONResponse(content=_guests)
-
-@app.get('/shots')
-def shots(request: Request, query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
-          limit: int = 20):
-    from aig_shots import shots
-    host, path, username, password = config()
-    columns = [
-        "name", "username", "club", "score", "postureScore", "ballisticScore", "studio", "sites",
-        "前傾角度.address", "前傾角度.backswing", "前傾角度.top", "前傾角度.halfdown", "前傾角度.impact",
-        "前傾角度.follow",
-        "前傾角度.finish",
-        "背骨の傾き.address", "背骨の傾き.backswing", "背骨の傾き.top", "背骨の傾き.halfdown", "背骨の傾き.impact",
-        "背骨の傾き.follow",
-        "背骨の傾き.finish",
-        "首元の動き.address", "首元の動き.backswing", "首元の動き.top", "首元の動き.halfdown", "首元の動き.impact",
-        "首元の動き.follow",
-        "首元の動き.finish",
-        "右腰の動き.address", "右腰の動き.backswing", "右腰の動き.top", "右腰の動き.halfdown", "右腰の動き.impact",
-        "右腰の動き.follow",
-        "右腰の動き.finish",
-        "左腰の動き.address", "左腰の動き.backswing", "左腰の動き.top", "左腰の動き.halfdown", "左腰の動き.impact",
-        "左腰の動き.follow",
-        "左腰の動き.finish",
-        "重心の動き_正面.address", "重心の動き_正面.backswing", "重心の動き_正面.top", "重心の動き_正面.halfdown",
-        "重心の動き_正面.impact",
-        "重心の動き_正面.follow", "重心の動き_正面.finish",
-        "右膝の角度.address", "右膝の角度.backswing", "右膝の角度.top", "右膝の角度.halfdown", "右膝の角度.impact",
-        "右膝の角度.follow",
-        "右膝の角度.finish",
-        "手元の浮き.address", "手元の浮き.backswing", "手元の浮き.top", "手元の浮き.halfdown", "手元の浮き.impact",
-        "手元の浮き.follow",
-        "手元の浮き.finish",
-        "左膝の角度.address", "左膝の角度.backswing", "左膝の角度.top", "左膝の角度.halfdown", "左膝の角度.impact",
-        "左膝の角度.follow",
-        "左膝の角度.finish",
-        "頭の動き.address", "頭の動き.backswing", "頭の動き.top", "頭の動き.halfdown", "頭の動き.impact", "頭の動き.follow",
-        "頭の動き.finish",
-        "両肩の傾き_正面.address", "両肩の傾き_正面.backswing", "両肩の傾き_正面.top", "両肩の傾き_正面.halfdown",
-        "両肩の傾き_正面.impact",
-        "両肩の傾き_正面.follow", "両肩の傾き_正面.finish",
-        "重心の動き_後方.address", "重心の動き_後方.backswing", "重心の動き_後方.top", "重心の動き_後方.halfdown",
-        "重心の動き_後方.impact",
-        "重心の動き_後方.follow", "重心の動き_後方.finish",
-        "グリップ位置.address", "グリップ位置.backswing", "グリップ位置.top", "グリップ位置.halfdown", "グリップ位置.impact",
-        "グリップ位置.follow",
-        "グリップ位置.finish",
-        "手首軌道.address", "手首軌道.backswing", "手首軌道.top", "手首軌道.halfdown", "手首軌道.impact",
-        "手首軌道.follow",
-        "手首軌道.finish",
-        "腰の開き.address", "腰の開き.backswing", "腰の開き.top", "腰の開き.halfdown", "腰の開き.impact", "腰の開き.follow",
-        "腰の開き.finish",
-        "肩の開き.address", "肩の開き.backswing", "肩の開き.top", "肩の開き.halfdown", "肩の開き.impact", "肩の開き.follow",
-        "肩の開き.finish",
-        "トータル", "トータルブレ", "キャリー", "キャリーブレ", "ヘッドスピード", "ボール初速", "ミート率", "打ち出し角 上下", "打ち出し角 左右",
-        "バックスピン",
-        "サイドスピン", "ブロー角", "ヘッド軌道", "フェイス角",
-    ]
-
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        _shots, columns = shots.shots(client.aig, query, skip, limit, sort, columns)
-    return templates.TemplateResponse("shots.j2",
-                                      context={"request": request, "host": host, "path": path,
-                                               "shots": _shots, "columns": columns})
-
-@app.get('/shoting')
-def shoting(request: Request, root: str = "admin@aigia.co.jp"):
-    host, path, username, password = config()
-    return templates.TemplateResponse("shoting.j2",
-                                      context={"request": request, "host": host, "path": path,
-                                               "rootuser": root})
 
 class Item(BaseModel):
     key: str
     count: int = 0
-
-@app.post('/api/shoting')
-def shoting(item: Item):
-    from aig_accounts import accounts, payment
-    host, path, username, password = config()
-    try:
-        for i in range(item.count):
-            print(i, "秒経過2")
-            time.sleep(5)
-            url = "http://localhost/shotsm?f=/Users/" + os.environ.get(
-                "USER") + "/project/aig/data/20200218/20200218-170749.kar"
-            r = requests.get(url)
-            if i == item.count:
-                return JSONResponse(content={})
-    except Exception as e:
-        raise HTTPException(status_code=403, detail=e)
-
-@app.get('/stream/shots')
-def stream_shots(query: Any = {}, sort: str = "platform.description.score", skip: int = 0,
-                 limit: int = 20):
-    from aig_shots import shots
-    host, path, username, password = config()
-    columns = [
-        "name", "username", "club", "score", "postureScore", "ballisticScore", "studio", "sites",
-        "前傾角度.address", "前傾角度.backswing", "前傾角度.top", "前傾角度.halfdown", "前傾角度.impact",
-        "前傾角度.follow",
-        "前傾角度.finish",
-        "背骨の傾き.address", "背骨の傾き.backswing", "背骨の傾き.top", "背骨の傾き.halfdown", "背骨の傾き.impact",
-        "背骨の傾き.follow",
-        "背骨の傾き.finish",
-        "首元の動き.address", "首元の動き.backswing", "首元の動き.top", "首元の動き.halfdown", "首元の動き.impact",
-        "首元の動き.follow",
-        "首元の動き.finish",
-        "右腰の動き.address", "右腰の動き.backswing", "右腰の動き.top", "右腰の動き.halfdown", "右腰の動き.impact",
-        "右腰の動き.follow",
-        "右腰の動き.finish",
-        "左腰の動き.address", "左腰の動き.backswing", "左腰の動き.top", "左腰の動き.halfdown", "左腰の動き.impact",
-        "左腰の動き.follow",
-        "左腰の動き.finish",
-        "重心の動き_正面.address", "重心の動き_正面.backswing", "重心の動き_正面.top", "重心の動き_正面.halfdown",
-        "重心の動き_正面.impact",
-        "重心の動き_正面.follow", "重心の動き_正面.finish",
-        "右膝の角度.address", "右膝の角度.backswing", "右膝の角度.top", "右膝の角度.halfdown", "右膝の角度.impact",
-        "右膝の角度.follow",
-        "右膝の角度.finish",
-        "手元の浮き.address", "手元の浮き.backswing", "手元の浮き.top", "手元の浮き.halfdown", "手元の浮き.impact",
-        "手元の浮き.follow",
-        "手元の浮き.finish",
-        "左膝の角度.address", "左膝の角度.backswing", "左膝の角度.top", "左膝の角度.halfdown", "左膝の角度.impact",
-        "左膝の角度.follow",
-        "左膝の角度.finish",
-        "頭の動き.address", "頭の動き.backswing", "頭の動き.top", "頭の動き.halfdown", "頭の動き.impact", "頭の動き.follow",
-        "頭の動き.finish",
-        "両肩の傾き_正面.address", "両肩の傾き_正面.backswing", "両肩の傾き_正面.top", "両肩の傾き_正面.halfdown",
-        "両肩の傾き_正面.impact",
-        "両肩の傾き_正面.follow", "両肩の傾き_正面.finish",
-        "重心の動き_後方.address", "重心の動き_後方.backswing", "重心の動き_後方.top", "重心の動き_後方.halfdown",
-        "重心の動き_後方.impact",
-        "重心の動き_後方.follow", "重心の動き_後方.finish",
-        "グリップ位置.address", "グリップ位置.backswing", "グリップ位置.top", "グリップ位置.halfdown", "グリップ位置.impact",
-        "グリップ位置.follow",
-        "グリップ位置.finish",
-        "手首軌道.address", "手首軌道.backswing", "手首軌道.top", "手首軌道.halfdown", "手首軌道.impact",
-        "手首軌道.follow",
-        "手首軌道.finish",
-        "腰の開き.address", "腰の開き.backswing", "腰の開き.top", "腰の開き.halfdown", "腰の開き.impact", "腰の開き.follow",
-        "腰の開き.finish",
-        "肩の開き.address", "肩の開き.backswing", "肩の開き.top", "肩の開き.halfdown", "肩の開き.impact", "肩の開き.follow",
-        "肩の開き.finish",
-        "トータル", "トータルブレ", "キャリー", "キャリーブレ", "ヘッドスピード", "ボール初速", "ミート率", "打ち出し角 上下", "打ち出し角 左右",
-        "バックスピン",
-        "サイドスピン", "ブロー角", "ヘッド軌道", "フェイス角",
-    ]
-
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        return StreamingResponse(shots.generate_shots(client.aig, query, skip, limit, sort, columns))
 
 @app.get('/download/graph')
 def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
@@ -665,172 +453,4 @@ def upload_file(upload_file: UploadFile = File(...)):
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000, log_level="info")
 
-
-"""
-@app.get('/tree')
-def tree(request: Request, key: str = "", root: str = "admin@aigia.co.jp"):
-    from aig_accounts import accounts
-    host, path, _key, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        _accounts = accounts.relation_tree(client.aig, root)
-    return templates.TemplateResponse("accounts_tree.j2",
-                                      context={"request": request, "host": host, "path": path, "key": key,
-                                               "rootuser": root, "accounts": _accounts})
-"""
-
-"""
-@app.get('/validation')
-def validation(key: str = "key", root: str = "admin@aigia.co.jp"):
-    from aig_accounts import accounts
-    host, path, _key, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        data = accounts.valid_relation(client.aig, True)
-        df = pd.DataFrame(data, columns=["from", "to", "type"])
-        output = sister("validation.csv")
-        df.to_csv(output, index=False)
-    return FileResponse(path=output, media_type='text/csv', filename="validation.csv")
-
-"""
-'''
-@app.route('/graph', methods=['GET'])
-def graph(request: Request, key: str = "key", root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
-	from aig_accounts import accounts
-	if key is not None:
-		host, path, _key, username, password = config()
-		if _key == key:
-			# circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
-			with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net" , "aig?retryWrites=true&w=majority")) as client:
-				output = sister("aig.svg")
-				accounts.relation_graph(client.aig, output, root, depth, layout)
-			return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
-		else:
-			raise HTTPException(status_code=403, detail="invalid key.")
-	else:
-		raise HTTPException(status_code=403, detail="no key.")
-'''
-
-"""
-def translate_username(username,translate_table):
-    for column in translate_table:
-        if column['username'] == username:
-
-
-
-
-    return nickname
-"""
-
-"""
-#@app.get('/')
-def user_list(request: Request):
-    host, path, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net","aig?retryWrites=true&w=majority")) as client:
-
-        studios = []
-
-        accounts = client.aig.accounts
-
-        studio_cursor = accounts.find({"type": "studio"})
-        for studio in studio_cursor:
-            count_cousor = studio_users(client, studio["user_id"])
-            while True:
-                count = next(count_cousor, None)
-                if count is not None:
-                    studios.append({"name": studio["username"], "nickname": studio["content"]["nickname"],
-                                "user_count": count["username"]})
-                else:
-                    break
-
-        return templates.TemplateResponse("studios.j2", context={"request": request, "studios": studios})
-"""
-
-"""
-
-#studioに結びつくuserを取り出す
-def user_list():
-    host, path, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net","aig?retryWrites=true&w=majority")) as client:
-
-        studios = []
-
-        accounts = client.aig.accounts
-
-        studio_cursor = accounts.find({"type": "studio"})
-        for studio in studio_cursor:
-            count_cousor = studio_users(client, studio["user_id"])
-            while True:
-                count = next(count_cousor, None)
-                if count is not None:
-                    studios.append({"name": studio["username"], "nickname": studio["content"]["nickname"],
-                                "user_count": count["username"]})
-                else:
-                    break
-        return studios
-
-#Dataframeに変換
-
-df_user_list = pd.DataFrame.from_dict(user_list())
-#print(df_user_list)
-
-"""
-
-"""
-#print(customer_email)
-
-#print(user_list())
-
-#print(df_user_list["user_count"])
-#d_col = dict(zip(df_user_list["user_count"] , df_user_list["name"]))
-#print(d_col)
-
-
-
-keys = []
-
-for user in customer_email:
-    for key, value in d_col.items():
-        if value == user:
-            keys.append(key)
-
-#print(keys)
-
-
-"""
-
-#print(df_user_list["user_count"].to_list())
-#print(type(df_user_list["user_count"].to_list()))
-"""
-
-def stripe_success():
-    result = []
-
-    for count_list in df_user_list["user_count"]:
-        if count_list in customer_email:
-            result.append
-
-    return result
-
-print(stripe_success())
-
-"""
-
-
-#userを一つ取り出してテーブルを回す
-#pandas 一致するものがあればnameをカウント1する
-
-
-
-"""
-def StudioList():
-    result = []
-    for stripe_index in range(len(stripe_df)):
-        stripe_username = stripe_df.at[stripe_index, 'Customer Email']
-        result = stripe_username.append
-    return result
-
-print(StudioList())
-
-"""
 
