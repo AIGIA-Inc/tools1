@@ -132,8 +132,6 @@ async def refresh_token(current_user: User = Depends(get_current_user_with_refre
     """リフレッシュトークンでトークンを再取得"""
     return create_tokens(current_user.id)
 
-
-
 @app.get('/')
 def auth(request: Request):
     try:
@@ -148,7 +146,7 @@ def auth(request: Request):
 #    """ログイン中のユーザーを取得"""
 #    print(current_user)
 #    return current_user
-
+"""
 @app.get('/api/studios', response_model=User)
 def studio_list(current_user: User = Depends(get_current_user)):
     #print(current_user)
@@ -193,6 +191,58 @@ def studio_list(current_user: User = Depends(get_current_user)):
         return JSONResponse(content={"studios":studios,"code":code, "message":message})
     except Exception as e:
         error(e.message)
+"""
+
+@app.get('/api/studios/{sort_field}/{sort_order_param}')
+def studio_list(sort_field, sort_order_param):
+
+    sort_order = sort_order_param == "True"
+
+    code = -2
+    studios = []
+    message= ""
+    try:
+        host, path, username, password = config()
+        usernames = stripe_data("../data/upload.csv")
+        with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
+            if client:
+                aig = client.aig
+                if aig:
+                    accounts = client.aig.accounts
+                    studio_cursor = accounts.find({"type": "studio"}, sort=[('username',1)]) #.skip(skip).limit(limit)
+                    for studio in studio_cursor:
+                        valid_count = 0
+                        all_count = 0
+                        user_cousor = studio_users(client, studio["user_id"])
+                        try:
+                            while True:
+                                user = next(user_cousor,None)
+                                if user is not None:
+                                    all_count += 1
+                                    if len(usernames) > 0:
+                                        for username in usernames:
+                                            if user["username"] == username:
+                                                valid_count+=1
+                                    else:
+                                        code = -1
+                                        message = "dataフォルダーにupload.csvが入っていません."
+                                else:
+                                    break
+                        except Exception as e:
+                            error(e.message)
+
+                        studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
+
+        studios = sorted(studios, key=lambda item: item[sort_field], reverse=sort_order)
+
+        total_valid = sum([i['valid_count'] for i in studios])
+        total_all = sum([i['all_count'] for i in studios])
+        studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
+
+        return JSONResponse(content={"studios":studios,"code":code, "message":message})
+    except Exception as e:
+        error(e.message)
+
 
 
 
