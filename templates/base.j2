@@ -14,22 +14,16 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
 		crossorigin="anonymous"></script>
-<div id="app" class="container-fluid" style="padding:0">
+<div id="app" class="container-fluid" style="padding:0; height:100%">
 	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 		<div class="container-fluid">
-			<a class="navbar-brand" >AIG Report</a>
-			<span>[[code]]</span>
-
-			<button type="button" class="btn btn-primary" v-on:click="get">get</button>
-			<button type="button" class="btn btn-primary" v-on:click="display">display</button>
-
+			<a class="navbar-brand" href="#">AIG Report  </a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
 					aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<li class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav">
-				    <!--
 					<li class="nav-item">
 						<a class="nav-link" href="{{path}}/">Graph</a>
 					</li>
@@ -49,7 +43,7 @@
 						<a class="nav-link" href="{{path}}/studios">Studios</a>
 					</li>
 
-						<li class="nav-item dropdown">
+					<!--	<li class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink0" role="button"
 						   data-bs-toggle="dropdown" aria-expanded="false">
 							Download...
@@ -63,85 +57,35 @@
                             <li><a class="dropdown-item" href="{{path}}/download/shots">shots</a></li>
 						</ul>
 					</li>  -->
-
-					<li class="nav-item dropdown" v-if=" code == 0 ">
-				        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-						    Layout...
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink1" role="button"
+						   data-bs-toggle="dropdown" aria-expanded="false">
+							Layout...
 						</a>
 						<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
-							<li><a class="dropdown-item" href="{{path}}/draw?layout=circo">cicle</a></li>
-							<li><a class="dropdown-item" href="{{path}}/draw?layout=dot">tree</a></li>
-							<li><a class="dropdown-item" href="{{path}}/draw?layout=fdp">fdp</a></li>
-							<li><a class="dropdown-item" href="{{path}}/draw?layout=neato">neato</a></li>
-							<li><a class="dropdown-item" href="{{path}}/draw?layout=sfdp">sfdp</a></li>
-							<li><a class="dropdown-item" ZFhref="{{path}}/draw?layout=twopi">twopi</a></li>
+							<li><a class="dropdown-item" href="{{path}}/hoge?layout=circo">cicle</a></li>
+							<li><a class="dropdown-item" href="{{path}}/hoge?layout=dot">tree</a></li>
+							<li><a class="dropdown-item" href="{{path}}/hoge?layout=fdp">fdp</a></li>
+							<li><a class="dropdown-item" href="{{path}}/hoge?layout=neato">neato</a></li>
+							<li><a class="dropdown-item" href="{{path}}/hoge?layout=sfdp">sfdp</a></li>
+							<li><a class="dropdown-item" href="{{path}}/hoge?layout=twopi">twopi</a></li>
 						</ul>
 					</li>
 					<li>
 					    <button type="button" class="btn btn-primary" v-on:click="logout">Logout</button>
 					</li>
-					<li>
-						<span class="btn btn-primary">[[message]]</span>
-					</li>
 				</ul>
 			</li>
 		</div>
 	</nav>
-	<div class="container">
-  <div class="row">
-  <div v-if="code == -2">
-    <form>
-        <div class="col-6">
-      	    <div class="input-group">
-                <input type="text" v-model="username" maxlength="20"　name="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
-            </div>
-        </div>
-        <div class="col-6">
-      	    <div class="input-group">
-                <input type="text"  v-model="password" maxlength="20"　name="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1">
-            </div>
-        </div>
-        <button type="button" class="btn btn-primary" v-on:click="login">Login</button>
-    </form>
-    </div>
-
-    <div v-if="code == 0" class="row" style="margin:20px;padding:20px">
-		<div class="col-1">
-		</div>
-		<div class="col">
-			<table class="table">
-				<thead>
-				<tr>
-					<th scope="col">studio name</th>
-					<th scope="col">name</th>
-					<th scope="col">valid count</th>
-					<th scope="col">all count</th>
-				</tr>
-				</thead>
-				<tbody>
-					<tr v-for="studio in items" >
-						<td>[[studio.name]]</td>
-						<td>[[studio.nickname]]</td>
-						<td v-if="code == 0">[[studio.valid_count]]</td>
-                        <td v-else>-</td>
-						<td>[[studio.all_count]]</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div class="col-1"></div>
-	</div>
-
-
-  </div>
-</div>
 	{% block body %}
 	{% endblock %}
 </div>
 {% block trailing %}
 {% endblock %}
+	<script>
 
-<script>
+
 	new Vue({
 		el: "#app",
 		delimiters: ["[[", "]]"],
@@ -149,24 +93,17 @@
 			return {
 				username:"",
 				password:"",
-				items: [],
-				message:"",
-				code: -2,
-				access_token: "",
-				reflash_token: ""
+                sort_order: "True",
+				items: []
 			}
 		},
 		methods: {
 			login: function () {
-                axios.post('/token', {username:this.username, password:this.password}, { headers: { accept: "application/json", "Content-Type": "application/x-www-form-urlencoded"}})
+                axios.post('/login', {username:this.username, password:this.password})
                     .then((response) => {
-                       if (response.status === 200) {
-                         this.access_token = response.data.access_token;
-                         this.reflash_token = response.data.reflesh_token;
-                         this.code = 0;
+                       if (response.data.code === 0) {
+                         window.location.href = '/main';
                        } else {
-                         this.access_token = "";
-                         this.message = response.data.message;
                        }
                     }).catch((e) => {
 
@@ -176,42 +113,57 @@
                 axios.post('/logout')
                     .then((response) => {
                      if (response.data.code === 0) {
-                     this.code = -2;
-
+                       window.location.href = '/';
                        } else {
                        }
                     }).catch((e) => {
 
-                })
-            },
-            upload: function () {
-                axios.post('/upload')
-                    .then((response) => {
-                     if (response.data.code === 0) {
-                       } else {
-                       }
-                    }).catch((e) => {
-                })
-            },
-            display: function () {
-                axios.get('/hoge', { headers: { accept: "application/json", Authorization: "Bearer " + this.access_token}})
-                    .then((response) => {
-                    console.log(response);
-                    }).catch((e) => {
-                    console.log(e);
                 })
             },
             get: function () {
-                axios.get( '/api/studios', { headers: { accept: "application/json", Authorization: "Bearer " + this.access_token}})
+                axios.get('/api/studios/name/True')
                     .then((response) => {
-                        this.items = response.data.studios;
-                        this.code = response.data.code;
-                        this.message = response.data.message;
+                        this.items = response.data;
                     }).catch((e) => {
                     console.log(e);
                 })
             },
-
+            name: function () {
+                axios.get('/api/studios/name/' + this.sort_order)
+                    .then((response) => {
+                     if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+			nickname: function () {
+                axios.get('/api/studios/nickname/' + this.sort_order)
+                    .then((response) => {
+                        if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+			valid_count: function () {
+                axios.get('/api/studios/valid_count/' + this.sort_order)
+                    .then((response) => {
+                        if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
+			all_count: function () {
+                axios.get('/api/studios/all_count/' + this.sort_order)
+                    .then((response) => {
+                        if (this.sort_order === "True") { this.sort_order = "False" } else {  this.sort_order = "True" };
+                        this.items = response.data;
+                    }).catch((e) => {
+                    console.log(e);
+                })
+            },
 		},
 		mounted() {
             this.get();
