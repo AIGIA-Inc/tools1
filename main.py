@@ -27,9 +27,9 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from fastapi import Depends, File, HTTPException, UploadFile, status
 
-logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+#logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
+#logger = logging.getLogger(__name__)
+#logger.setLevel(logging.DEBUG)
 
 app = FastAPI()
 
@@ -101,10 +101,8 @@ def refresh(Authorize: AuthJWT = Depends()):
     Authorize.set_access_cookies(new_access_token)
     return {"msg":"The token has been refresh"}
 
-
-
 @app.post('/logout')
-def logout(request: Request, Authorize: AuthJWT = Depends()):
+def logout(Authorize: AuthJWT = Depends()):
     """
     Because the JWT are stored in an httponly cookie now, we cannot
     log the user out by simply deleting the cookies in the frontend.
@@ -114,7 +112,8 @@ def logout(request: Request, Authorize: AuthJWT = Depends()):
     Authorize.unset_jwt_cookies()
     result = {"code": 0,"message": "logout success."}
     return result
-    # return templates.TemplateResponse("auth.j2", context={"request": request})
+    # return templates.TemplateResponse("base.j2", context={"request": request})
+
 
 @app.get('/protected')
 def protected(Authorize: AuthJWT = Depends()):
@@ -132,19 +131,40 @@ def protected(Authorize: AuthJWT = Depends()):
 KB = 1024
 MB = 1024 * KB
 
+@app.post("/upload")
+def upload_file(upload_file: UploadFile = File(...)):
+    # ファイルサイズ検証
+    upload_file.file.seek(0, 2)  # シークしてサイズ検証
+    file_size = upload_file.file.tell()
+    if file_size > 20 * MB:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="アップロードファイルは20MB制限です",
+        )
+    else:
+        upload_file.file.seek(0)  # シークを戻す
 
-# logger = logging.getLogger('uvicorn')
-# logger.info('info-test')
+    tmp_path: Path = ""
+    try:
+        suffix = Path(upload_file.filename).suffix
+        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(upload_file.file, tmp)
+            tmp_path = Path(tmp.name)
+            print(tmp_path)
+    except Exception as e:
+        print(f"一時ファイル作成: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="一時ファイル作成できません",
+        )
+    finally:
+        upload_file.file.close()
 
+    shutil.move(tmp_path, PATH_UPLOAD)
+    result = {"code": 0,"message": "logout success."}
 
-# app.logger.setLevel(logging.DEBUG)
+    return result
 
-# log_path = os.path.expanduser(os.path.join("../logs", "tools.log"))
-# log_handler = logging.FileHandler(log_path)
-# log_handler.setLevel(logging.DEBUG)
-# app.logger.addHandler(log_handler)
-# root_path = "../public/result"
-# default_root_user = "admin@aigia.co.jp"
 
 def sister(name):
     return os.path.expanduser(os.path.join(PATH_ROOT, name))
@@ -169,14 +189,34 @@ def stripe_config():
 
 
 def connect_string(protocol, username, password, host, db):
+    #ローカル接続
     #return "mongodb://localhost/aig"
+    #待機系接続
     return protocol + "://" + username + ":" + password + "@" + host + "/" + db
 
+def stripe_data(filepath):
+    customer_email = []
+    try:
+        df = pd.read_csv(filepath)
+        stripe_df = pd.DataFrame(data=df)
+        customer_email = stripe_df.loc[:, "Customer Email"].to_list()
+    except Exception as e:
+        error("stripe_data")
+    finally:
+        return customer_email
 
-@app.get('/hoge')
-def index(request: Request, key: str = "", root: str = "admin@aigia.co.jp", layout: str = "fdp"):
+
+@app.get('/test')
+def studio_list(request: Request):
+    return templates.TemplateResponse("test.j2", context={"request": request})
+
+
+@app.get('/draw')
+def index(request: Request, root: str = "admin@aigia.co.jp", layout: str = "fdp",Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
     host, path, username, password = config()
     return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
+
 
 @app.get('/accounts')
 def accounts(request: Request, root: str = "admin@aigia.co.jp"):
@@ -265,9 +305,7 @@ def totallings(request: Request):
     host, path, username, password = config()
     return templates.TemplateResponse("totallings.j2", context={"request": request})
 
-@app.get('/test')
-def studio_list(request: Request):
-    return templates.TemplateResponse("test.j2", context={"request": request})
+
 
 @app.get('/')
 def auth(request: Request):
@@ -417,38 +455,6 @@ def studio_users(client,item_id):
 
 
 
-@app.post("/upload/")
-def upload_file(upload_file: UploadFile = File(...)):
-    # ファイルサイズ検証
-    upload_file.file.seek(0, 2)  # シークしてサイズ検証
-    file_size = upload_file.file.tell()
-    if file_size > 20 * MB:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="アップロードファイルは20MB制限です",
-        )
-    else:
-        upload_file.file.seek(0)  # シークを戻す
-
-    tmp_path: Path = ""
-    try:
-        suffix = Path(upload_file.filename).suffix
-        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(upload_file.file, tmp)
-            tmp_path = Path(tmp.name)
-            print(tmp_path)
-    except Exception as e:
-        print(f"一時ファイル作成: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="一時ファイル作成できません",
-        )
-    finally:
-        upload_file.file.close()
-
-    shutil.move(tmp_path, PATH_UPLOAD)
-
-    return {"message": "アップロード完了"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000, log_level="info")
