@@ -1,5 +1,6 @@
 __pycache__
 product
+test
 config
 aig
 aig.svg
@@ -7,4 +8,3 @@ aig.svg
 .vscode/sftp.json
 papi.py
 *.csv
-
