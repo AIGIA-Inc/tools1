@@ -33,7 +33,6 @@ if __name__ == "__main__":
     pprint.pprint(list(map(build_directory, ["/product/templates",
                                      "/product/static",
                                      "/product/aig_accounts",
-                                     "/product/aig_shots",
                                      "/product/config",
                                      "/product/data"
                                      ])))
@@ -47,19 +46,10 @@ if __name__ == "__main__":
                                 "/aig_accounts/__init__.py",
                                 "/aig_accounts/accounts.py",
                                 "/aig_accounts/payment.py",
-                                "/aig_shots/__init__.py",
-                                "/aig_shots/shots.py",
-                                "/aig_shots/download_shots.py",
-                                "/templates/accounts.j2",
-                                "/templates/accounts_tree.j2",
                                 "/templates/auth.j2",
                                 "/templates/base.j2",
                                 "/templates/error.j2",
-                                "/templates/guests.j2",
                                 "/templates/index.j2",
                                 "/templates/test.j2",
                                 "/templates/studios.j2",
-                                "/templates/shots.j2",
-                                "/templates/totalling.j2",
-                                "/templates/totallings.j2",
                                 ])))
