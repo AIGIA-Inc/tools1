@@ -95,25 +95,27 @@
 
 
 <div class="container">
-    <div class="d-flex align-items-center">
-        <div v-if="code == -2">
-            <form style="margin:0 auto;margin-top:100px;">
-                <div class="row">
-                    <div style="margin:0 auto">
-      	                <div class="col">
-      	                    <div class="input-group">
-                                <input type="text" v-model="username" maxlength="20"　name="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+    <div class="row">
+        <div class="d-flex align-items-center">
+            <div v-if="code == -2">
+                <form style="margin:0 auto;margin-top:100px;">
+                    <div class="row">
+                        <div style="margin:0 auto">
+          	                <div class="col">
+          	                    <div class="input-group">
+                                    <input type="text" v-model="username" maxlength="20"　name="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col">
-      	                <div class="input-group">
-                            <input type="text"  v-model="password" maxlength="20"　name="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1">
+                        <div class="col">
+          	                <div class="input-group">
+                                <input type="text"  v-model="password" maxlength="20"　name="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1">
+                            </div>
                         </div>
+                        <button type="button" class="btn btn-primary" v-on:click="login">Login</button>
                     </div>
-                    <button type="button" class="btn btn-primary" v-on:click="login">Login</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
         <div v-if="code == 0" class="row" style="margin:20px;padding:20px">
 		    <div class="col-1">
@@ -180,7 +182,6 @@
                          this.message = response.data.message;
                        }
                     }).catch((e) => {
-
                 })
             },
             logout: function () {
@@ -188,11 +189,9 @@
                     .then((response) => {
                      if (response.data.code === 0) {
                      this.code = -2;
-
                        } else {
                        }
                     }).catch((e) => {
-
                 })
             },
             upload: function () {
@@ -202,14 +201,6 @@
                        } else {
                        }
                     }).catch((e) => {
-                })
-            },
-            display: function () {
-                axios.get('/hoge', { headers: { accept: "application/json", Authorization: "Bearer " + this.access_token}})
-                    .then((response) => {
-                    console.log(response);
-                    }).catch((e) => {
-                    console.log(e);
                 })
             },
             get: function () {
@@ -258,8 +249,6 @@
                     console.log(e);
                 })
             },
-		},
-
 		},
 		mounted() {
             this.get();

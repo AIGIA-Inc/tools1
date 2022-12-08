@@ -7,16 +7,15 @@
 import os
 import json
 import pathlib
-import pandas as pd
 import uvicorn
+import pandas as pd
+import logging
 import shutil
 
 
-from datetime import datetime
 from pymongo import MongoClient
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from fastapi import FastAPI, Request
@@ -27,9 +26,9 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from fastapi import Depends, File, HTTPException, UploadFile, status
 
-#logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
-#logger = logging.getLogger(__name__)
-#logger.setLevel(logging.DEBUG)
+logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 app = FastAPI()
 
@@ -65,11 +64,17 @@ class Settings(BaseModel):
 def get_config():
     return Settings()
 
+
+
+
+
+
+
+
 # 例外処理
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return templates.TemplateResponse("error.j2", context={"request": request, "error": exc})
-
 
 @app.post('/login')
 def login(user: User, Authorize: AuthJWT = Depends()):
@@ -378,7 +383,7 @@ def studio_list(sort_field, sort_order_param, Authorize: AuthJWT = Depends()):
         total_all = sum([i['all_count'] for i in studios])
         studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
 
-        return JSONResponse(content=studios)
+        return JSONResponse(content={"studios":studios,"code":code, "message":message})
     except Exception as e:
         error(e.message)
 
