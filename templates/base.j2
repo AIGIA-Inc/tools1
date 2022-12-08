@@ -24,7 +24,7 @@
 			<span>[[code]]</span>
 
 			<button type="button" class="btn btn-primary" v-on:click="get">get</button>
-			<button type="button" class="btn btn-primary" v-on:click="display">display</button>
+			<!-- <button type="button" class="btn btn-primary" v-on:click="display">display</button> -->
 
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
 					aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -182,6 +182,7 @@
                          this.message = response.data.message;
                        }
                     }).catch((e) => {
+                    console.log(e.message);
                 })
             },
             logout: function () {
