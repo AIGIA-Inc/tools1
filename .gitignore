@@ -3,6 +3,7 @@ product
 test
 config
 stash
+reverse
 aig
 aig.svg
 .idea
