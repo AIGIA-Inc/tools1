@@ -206,10 +206,8 @@ def stripe_data(filepath):
         return customer_email
 
 
-#直す
 def api_accounts(client_studio,item_id):
     try:
-        #target = "636b46c20e2b5ab41da72265"
         pipeline = [
             {'$match': { 'from_id': item_id } },
             {'$graphLookup': {
@@ -255,7 +253,6 @@ def api_accounts(client_studio,item_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
 
-#直す
 def studio_users(client,item_id):
     try:
         pipeline = [
