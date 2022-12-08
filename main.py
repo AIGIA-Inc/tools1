@@ -206,158 +206,7 @@ def stripe_data(filepath):
         return customer_email
 
 
-@app.get('/test')
-def studio_list(request: Request):
-    return templates.TemplateResponse("test.j2", context={"request": request})
-
-
-@app.get('/draw')
-def index(request: Request, root: str = "admin@aigia.co.jp", layout: str = "fdp",Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    host, path, username, password = config()
-    return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
-
-
-@app.get('/accounts')
-def accounts(request: Request, root: str = "admin@aigia.co.jp"):
-    host, path, username, password = config()
-
-    try:
-        return templates.TemplateResponse("accounts.j2",
-                                          context={"request": request, "host": host, "path": path,
-                                                   "rootuser": root})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=e)
-
-
-def json_serial(user):
-    date = user['date']
-    if isinstance(date, (datetime, date)):
-        user['date'] = date.isoformat()
-    return user
-
-
-@app.get('/api/accounts')
-def api_accounts(skip: int = 0, limit: int = 20, category: str = ""):
-    from aig_accounts import accounts, payment
-
-    host, path, username, password = config()
-
-    try:
-        stripeconfig = stripe_config()
-        stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-        with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                        "aig?retryWrites=true&w=majority")) as client:
-            users = accounts.accounts(client.aig, skip, limit, stripe, category)
-        return JSONResponse(content=list(map(json_serial, users)))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=e)
-
-
-@app.get('/api/accounts/count')
-def api_accounts(skip: int = 0, category: str = ""):
-    from aig_accounts import accounts, payment
-    host, path, username, password = config()
-
-    try:
-        stripeconfig = stripe_config()
-        stripe = payment.Stripe(stripeconfig['protocol'], stripeconfig['host'], stripeconfig['key'])
-        with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                        "aig?retryWrites=true&w=majority")) as client:
-            users = accounts.accounts_count(client.aig, stripe, category)
-        return JSONResponse(content=users)
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=e)
-
-
-
-
-
-class Item(BaseModel):
-    key: str
-    count: int = 0
-
-@app.get('/download/graph')
-def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
-    # from aig_accounts import download_accounts
-    from aig_accounts import accounts
-    host, path, username, password = config()
-    # circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        output = sister("aig.svg")
-        accounts.relation_graph(client.aig, output, root, depth, layout)
-    return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
-
-
-@app.get('/usernames')
-def usernames(type: str = "", skip: int = 0, limit: int = 20):
-    from aig_accounts import accounts
-    host, path, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        users = accounts.user_by_type(client.aig, type, skip, limit)
-    return JSONResponse(content=users)
-
-@app.get('/totallings', response_class=HTMLResponse)
-def totallings(request: Request):
-    host, path, username, password = config()
-    return templates.TemplateResponse("totallings.j2", context={"request": request})
-
-
-
-@app.get('/')
-def auth(request: Request):
-    return templates.TemplateResponse("auth.j2", context={"request": request})
-
-@app.get('/main')
-def studio_list(request: Request, Authorize: AuthJWT = Depends()):
-
-    return templates.TemplateResponse("studios.j2", context={"request": request})
-
-@app.get('/api/studios/{sort_field}/{sort_order_param}')
-# def studio_list(request: Request, Authorize: AuthJWT = Depends()):
-def studio_list(sort_field, sort_order_param, Authorize: AuthJWT = Depends()):
-
-    sort_order = sort_order_param == "True"
-
-    df = pd.read_csv("data/upload.csv")
-    stripe_df = pd.DataFrame(data=df)
-    customer_email = stripe_df.loc[:, "Customer Email"].to_list()
-
-    studios = []
-    Authorize.jwt_required()
-    host, path, username, password = config()
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
-        accounts = client.aig.accounts
-        studio_cursor = accounts.find({"type": "studio"}, sort=[('username',1)]) #.skip(skip).limit(limit)
-        for studio in studio_cursor:
-            valid_count = 0
-            all_count = 0
-            user_cousor = studio_users(client, studio["user_id"])
-            try:
-                while True:
-                    user = next(user_cousor,None)
-                    if user is not None:
-                        all_count += 1
-                        for username in customer_email:
-                            if user["username"] == username:
-                                valid_count+=1
-                    else:
-                        break
-            except Exception as e:
-                print(e)
-            studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
-
-    studios = sorted(studios, key=lambda item: item[sort_field], reverse=sort_order)
-
-    total_valid = sum([i['valid_count'] for i in studios])
-    total_all = sum([i['all_count'] for i in studios])
-    studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
-
-    return JSONResponse(content=studios)
-
+#直す
 def api_accounts(client_studio,item_id):
     try:
         #target = "636b46c20e2b5ab41da72265"
@@ -406,6 +255,7 @@ def api_accounts(client_studio,item_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
 
+#直す
 def studio_users(client,item_id):
     try:
         pipeline = [
@@ -451,9 +301,84 @@ def studio_users(client,item_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
 
-#stripeのcsvをDataframeに変換
 
 
+@app.get('/test')
+def studio_list(request: Request):
+    return templates.TemplateResponse("test.j2", context={"request": request})
+
+
+@app.get('/draw')
+def index(request: Request, root: str = "admin@aigia.co.jp", layout: str = "fdp",Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    host, path, username, password = config()
+    return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
+
+@app.get('/download/graph')
+def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
+    # from aig_accounts import download_accounts
+    from aig_accounts import accounts
+    host, path, username, password = config()
+    # circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
+                                    "aig?retryWrites=true&w=majority")) as client:
+        output = sister("aig.svg")
+        accounts.relation_graph(client.aig, output, root, depth, layout)
+    return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
+
+#直す
+@app.get('/')
+def auth(request: Request):
+    return templates.TemplateResponse("auth.j2", context={"request": request})
+
+#直す
+@app.get('/api/studios/{sort_field}/{sort_order_param}')
+# def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+def studio_list(sort_field, sort_order_param, Authorize: AuthJWT = Depends()):
+
+    sort_order = sort_order_param == "True"
+
+    df = pd.read_csv("data/upload.csv")
+    stripe_df = pd.DataFrame(data=df)
+    customer_email = stripe_df.loc[:, "Customer Email"].to_list()
+
+    studios = []
+    Authorize.jwt_required()
+    host, path, username, password = config()
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
+        accounts = client.aig.accounts
+        studio_cursor = accounts.find({"type": "studio"}, sort=[('username',1)]) #.skip(skip).limit(limit)
+        for studio in studio_cursor:
+            valid_count = 0
+            all_count = 0
+            user_cousor = studio_users(client, studio["user_id"])
+            try:
+                while True:
+                    user = next(user_cousor,None)
+                    if user is not None:
+                        all_count += 1
+                        for username in customer_email:
+                            if user["username"] == username:
+                                valid_count+=1
+                    else:
+                        break
+            except Exception as e:
+                print(e)
+            studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
+
+    studios = sorted(studios, key=lambda item: item[sort_field], reverse=sort_order)
+
+    total_valid = sum([i['valid_count'] for i in studios])
+    total_all = sum([i['all_count'] for i in studios])
+    studios.append({"name": "合計", "nickname": "", "valid_count": total_valid, "all_count": total_all})
+
+    return JSONResponse(content=studios)
+
+#直す
+@app.get('/main')
+def studio_list(request: Request, Authorize: AuthJWT = Depends()):
+
+    return templates.TemplateResponse("studios.j2", context={"request": request})
 
 
 if __name__ == "__main__":
