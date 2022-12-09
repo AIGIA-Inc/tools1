@@ -4,6 +4,7 @@ import logging
 import json
 import pandas as pd
 import os
+import shutil
 
 from fastapi import Depends, FastAPI,Request
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,6 +15,8 @@ from pymongo import MongoClient
 from fastapi.responses import JSONResponse
 from fastapi import Depends, File, HTTPException, UploadFile, status
 from fastapi.staticfiles import StaticFiles
+from tempfile import NamedTemporaryFile
+from pathlib import Path
 
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
 logger = logging.getLogger(__name__)
@@ -23,7 +26,10 @@ app = FastAPI()
 
 app.mount("/data", StaticFiles(directory="../data"), name="data")
 
+#デプロイ時　parent.parent→　parent　要修正
 PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent.parent / "templates")
+PATH_UPLOAD = str(pathlib.Path(__file__).resolve().parent.parent / "data") + "/upload.csv"
+
 templates = Jinja2Templates(directory=PATH_TEMPLATES)
 
 
@@ -205,6 +211,47 @@ def studio_list(sort_field, sort_order_param):
         return JSONResponse(content={"studios":studios,"code":code, "message":message})
     except Exception as e:
         error(e.message)
+
+
+
+KB = 1024
+MB = 1024 * KB
+
+@app.post("/upload")
+def upload_file(upload_file: UploadFile = File(...)):
+    # ファイルサイズ検証
+    upload_file.file.seek(0, 2)  # シークしてサイズ検証
+    file_size = upload_file.file.tell()
+    if file_size > 20 * MB:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="アップロードファイルは20MB制限です",
+        )
+    else:
+        upload_file.file.seek(0)  # シークを戻す
+
+    tmp_path: Path = ""
+    try:
+        suffix = Path(upload_file.filename).suffix
+        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(upload_file.file, tmp)
+            tmp_path = Path(tmp.name)
+            print(tmp_path)
+    except Exception as e:
+        print(f"一時ファイル作成: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="一時ファイル作成できません",
+        )
+    finally:
+        upload_file.file.close()
+
+    shutil.move(tmp_path, PATH_UPLOAD)
+    result = {"code": 0,"message": "logout success."}
+
+    return result
+
+
 
 
 
