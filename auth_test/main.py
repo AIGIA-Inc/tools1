@@ -3,6 +3,7 @@ import pathlib
 import logging
 import json
 import pandas as pd
+import os
 
 from fastapi import Depends, FastAPI,Request
 from fastapi.security import OAuth2PasswordRequestForm
@@ -12,12 +13,15 @@ from auth import get_current_user, get_current_user_with_refresh_token, create_t
 from pymongo import MongoClient
 from fastapi.responses import JSONResponse
 from fastapi import Depends, File, HTTPException, UploadFile, status
+from fastapi.staticfiles import StaticFiles
 
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 app = FastAPI()
+
+app.mount("/data", StaticFiles(directory="../data"), name="data")
 
 PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent.parent / "templates")
 templates = Jinja2Templates(directory=PATH_TEMPLATES)
@@ -139,6 +143,17 @@ def auth(request: Request):
     except Exception as e:
         print(e)
         error("auth")
+
+@app.get('/file_exist')
+def file_exist():
+    path = '../data/upload.csv'
+    is_file = os.path.isfile(path)
+    if is_file:
+        code = 1
+        return JSONResponse(content={"code":code})
+    else:
+        pass # パスが存在しないかファイルではない
+
 
 
 @app.get('/api/studios/{sort_field}/{sort_order_param}')
