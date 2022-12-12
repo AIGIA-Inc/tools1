@@ -24,6 +24,7 @@
 
             <button type="button" class="btn btn-primary" v-on:click="get">get</button>
             <button type="button" class="btn btn-primary" v-on:click="check">check</button>
+            <button type="button" class="btn btn-primary" v-on:click="refresh">refresh</button>
             <!-- <button type="button" class="btn btn-primary" v-on:click="display">display</button> -->
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -190,7 +191,7 @@
                     console.log(e.message);
                 })
             },
-            refresh: function () {
+            refresh: function (callback) {
                 this.refresh_token = localStorage.getItem("refresh_token");
                 if (this.refresh_token) {
                     axios.get('/refresh', {
@@ -200,10 +201,11 @@
                         }
                     }).then((response) => {
                         if (response.status === 200) {
-                       this.access_token = response.data.access_token;
+                            this.access_token = response.data.access_token;
                             this.refresh_token = response.data.refresh_token;
                             localStorage.setItem('access_token', this.access_token);
                             localStorage.setItem('refresh_token', this.refresh_token);
+                            if (callback) {callback()};
                         } else {
                             this.access_token = "";
                             localStorage.setItem('access_token', "");
@@ -225,9 +227,7 @@
                         } else {
                         }
                     }).catch((e) => {
-                    if (e.response.status === 401) {
-                        this.refresh();
-                    }
+
                 })
             },
             check: function () {
@@ -238,9 +238,7 @@
                             this.get();
                         }
                     }).catch((e) => {
-                    if (e.response.status === 401) {
-                        this.refresh();
-                    }
+
                 })
             },
             get: function () {
@@ -255,9 +253,7 @@
                         this.items = response.data.studios;
                         this.message = response.data.message;
                     }).catch((e) => {
-                        if (e.response.status === 401) {
-                            this.refresh();
-                        }
+
                     })
                 }
             },
@@ -271,9 +267,6 @@
                         }
                         this.items = response.data.studios;
                     }).catch((e) => {
-                    if (e.response.status === 401) {
-                        this.refresh();
-                    }
                 })
             },
             nickname: function () {
@@ -286,22 +279,7 @@
                         }
                         this.items = response.data.studios;
                     }).catch((e) => {
-                    if (e.response.status === 401) {
-                        this.refresh();
 
-                        axios.get('/api/studios/nickname/' + this.sort_order)
-                    .then((response) => {
-                        if (this.sort_order === "True") {
-                            this.sort_order = "False"
-                        } else {
-                            this.sort_order = "True"
-                        }
-                        this.items = response.data.studios;
-                    }).catch((e) => {
-
-                })
-
-                    }
                 })
             },
             valid_count: function () {
@@ -314,9 +292,7 @@
                         }
                         this.items = response.data.studios;
                     }).catch((e) => {
-                    if (e.response.status === 401) {
-                        this.refresh();
-                    }
+
                 })
             },
             all_count: function () {
@@ -329,9 +305,7 @@
                         }
                         this.items = response.data.studios;
                     }).catch((e) => {
-                    if (e.response.status === 401) {
-                        this.refresh();
-                    }
+
                 })
             },
         },
