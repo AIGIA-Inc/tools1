@@ -205,6 +205,7 @@
                             this.refresh_token = response.data.refresh_token;
                             localStorage.setItem('access_token', this.access_token);
                             localStorage.setItem('refresh_token', this.refresh_token);
+                            this.nickname()
                             if (callback) {callback()};
                         } else {
                             this.access_token = "";
@@ -257,9 +258,14 @@
                     })
                 }
             },
-            name: function () {
-                axios.get('/api/studios/name/' + this.sort_order)
-                    .then((response) => {
+            name: async function () {
+                 axios.get('/api/studios/name/' + this.sort_order,{
+                        headers: {
+                            accept: "application/json",
+                            Authorization: "Bearer " + this.access_token
+                        }
+                    })
+                    .then((response)  => {
                         if (this.sort_order === "True") {
                             this.sort_order = "False"
                         } else {
@@ -270,7 +276,12 @@
                 })
             },
             nickname: function () {
-                axios.get('/api/studios/nickname/' + this.sort_order)
+                axios.get('/api/studios/nickname/' + this.sort_order,{
+                        headers: {
+                            accept: "application/json",
+                            Authorization: "Bearer " + this.access_token
+                        }
+                    })
                     .then((response) => {
                         if (this.sort_order === "True") {
                             this.sort_order = "False"
@@ -279,11 +290,15 @@
                         }
                         this.items = response.data.studios;
                     }).catch((e) => {
-
                 })
             },
             valid_count: function () {
-                axios.get('/api/studios/valid_count/' + this.sort_order)
+                axios.get('/api/studios/valid_count/' + this.sort_order,{
+                        headers: {
+                            accept: "application/json",
+                            Authorization: "Bearer " + this.access_token
+                        }
+                    })
                     .then((response) => {
                         if (this.sort_order === "True") {
                             this.sort_order = "False"
@@ -296,7 +311,12 @@
                 })
             },
             all_count: function () {
-                axios.get('/api/studios/all_count/' + this.sort_order)
+                axios.get('/api/studios/all_count/' + this.sort_order,{
+                        headers: {
+                            accept: "application/json",
+                            Authorization: "Bearer " + this.access_token
+                        }
+                    })
                     .then((response) => {
                         if (this.sort_order === "True") {
                             this.sort_order = "False"

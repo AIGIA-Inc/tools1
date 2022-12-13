@@ -22,7 +22,7 @@ def create_tokens(user_id: int):
     # ペイロード作成
     access_payload = {
         'token_type': 'access_token',
-        'exp': datetime.utcnow() + timedelta(minutes=2),
+        'exp': datetime.utcnow() + timedelta(minutes=1),
         'user_id': user_id,
     }
     refresh_payload = {

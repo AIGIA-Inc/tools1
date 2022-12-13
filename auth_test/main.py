@@ -169,7 +169,8 @@ def file_exist():
 # @app.get('/api/studios/{sort_field}/{sort_order_param}', response_model=User)
 # def studio_list(sort_field, sort_order_param, current_user: User = Depends(get_current_user)):
 
-@app.get("/users/me/{sort_field}/{sort_order_param}", response_model=User)
+#@app.get("/users/me/{sort_field}/{sort_order_param}", response_model=User)
+@app.get('/api/studios/{sort_field}/{sort_order_param}', response_model=User)
 async def read_users_me(sort_field, sort_order_param, current_user: User = Depends(get_current_user)):
     sort_order = sort_order_param == "True"
     sort_field = "nickname"
