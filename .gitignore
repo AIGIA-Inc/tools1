@@ -10,3 +10,4 @@ aig.svg
 .vscode/sftp.json
 papi.py
 *.csv
+.html
