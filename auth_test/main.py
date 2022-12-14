@@ -19,24 +19,19 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from fastapi.responses import FileResponse
 
+app = FastAPI()
+
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-app = FastAPI()
-
-app.mount("/data", StaticFiles(directory="../data"), name="data")
 
 PATH_ROOT = str(pathlib.Path(__file__).resolve().parent)
 #デプロイ時　parent.parent→　parent　要修正
 PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent.parent / "templates")
 PATH_UPLOAD = str(pathlib.Path(__file__).resolve().parent.parent / "data") + "/upload.csv"
 
+app.mount("/data", StaticFiles(directory="../data"), name="data")
 templates = Jinja2Templates(directory=PATH_TEMPLATES)
-
-
-
-
 
 
 class Token(BaseModel):
@@ -62,8 +57,6 @@ def connect_string(protocol, username, password, host, db):
     #待機系接続
     return protocol + "://" + username + ":" + password + "@" + host + "/" + db
 
-
-
 def config():
     json_open = open('../config/default.json', 'r')
     json_load = json.load(json_open)
@@ -73,7 +66,6 @@ def config():
     username = json_load['username']
     password = json_load['password']
     return host, path, username, password
-
 
 def stripe_data(filepath):
     customer_email = []
@@ -85,7 +77,6 @@ def stripe_data(filepath):
         error("stripe_data")
     finally:
         return customer_email
-
 
 def studio_users(client,item_id):
     try:
@@ -136,7 +127,6 @@ def studio_users(client,item_id):
 def sister(name):
     return os.path.expanduser(os.path.join(PATH_ROOT, name))
 
-
 @app.post("/token", response_model=Token)
 async def login(form: OAuth2PasswordRequestForm = Depends()):
     """トークン発行"""
@@ -166,23 +156,12 @@ def file_exist():
     else:
         pass # パスが存在しないかファイルではない
 
-#@app.get("/users/me/", response_model=User)
-#async def read_users_me(current_user: User = Depends(get_current_user)):
-    """ログイン中のユーザーを取得"""
-#    return current_user
-
-
-# @app.get('/api/studios/{sort_field}/{sort_order_param}', response_model=User)
-# def studio_list(sort_field, sort_order_param, current_user: User = Depends(get_current_user)):
-
-#@app.get("/users/me/{sort_field}/{sort_order_param}", response_model=User)
 @app.get('/api/studios/{sort_field}/{sort_order_param}', response_model=User)
 async def read_users_me(sort_field, sort_order_param, current_user: User = Depends(get_current_user)):
     sort_order = sort_order_param == "True"
     sort_field = "nickname"
 
 #    user = current_user
-
     code = -2
     studios = []
     message= ""
@@ -217,7 +196,6 @@ async def read_users_me(sort_field, sort_order_param, current_user: User = Depen
                             error(e.message)
 
                         studios.append({"name":studio["username"],"nickname":studio["content"]["nickname"], "valid_count":valid_count, "all_count": all_count})
-
 
         studios = sorted(studios, key=lambda item: item[sort_field], reverse=sort_order)
 
@@ -262,12 +240,9 @@ def upload_file(upload_file: UploadFile = File(...)):
         )
     finally:
         upload_file.file.close()
-
     shutil.move(tmp_path, PATH_UPLOAD)
     result = {"code": 0,"message": "logout success."}
-
     return result
-
 
 @app.get('/draw')
 def index(request: Request, root: str = "egai-ikebukuro@earth-academy.co.jp", layout: str = "fdp"):
@@ -285,39 +260,6 @@ def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: 
         output = sister("aig.svg")
         accounts.relation_graph(client.aig, output, root, depth, layout)
     return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
-
-
-
-
-
-
-"""
-@app.get('/draw')
-def index(request: Request, root: str = "admin@aigia.co.jp", layout: str = "fdp",Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    host, path, username, password = config()
-    return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
-
-
-@app.get('/download/graph')
-def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
-    # from aig_accounts import download_accounts
-    from aig_accounts import accounts
-    host, path, username, password = config()
-    # circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
-                                    "aig?retryWrites=true&w=majority")) as client:
-        output = sister("aig.svg")
-        accounts.relation_graph(client.aig, output, root, depth, layout)
-    return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
-
-
-
-
-"""
-
-
-
 
 
 if __name__ == "__main__":
