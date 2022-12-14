@@ -17,6 +17,7 @@ from fastapi import Depends, File, HTTPException, UploadFile, status
 from fastapi.staticfiles import StaticFiles
 from tempfile import NamedTemporaryFile
 from pathlib import Path
+from fastapi.responses import FileResponse
 
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(pathname)s:%(lineno)s:%(message)s')
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ app = FastAPI()
 
 app.mount("/data", StaticFiles(directory="../data"), name="data")
 
+PATH_ROOT = str(pathlib.Path(__file__).resolve().parent)
 #デプロイ時　parent.parent→　parent　要修正
 PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent.parent / "templates")
 PATH_UPLOAD = str(pathlib.Path(__file__).resolve().parent.parent / "data") + "/upload.csv"
@@ -129,6 +131,10 @@ def studio_users(client,item_id):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=e)
+
+
+def sister(name):
+    return os.path.expanduser(os.path.join(PATH_ROOT, name))
 
 
 @app.post("/token", response_model=Token)
@@ -261,6 +267,57 @@ def upload_file(upload_file: UploadFile = File(...)):
     result = {"code": 0,"message": "logout success."}
 
     return result
+
+
+@app.get('/draw')
+def index(request: Request, root: str = "admin@aigia.co.jp", layout: str = "fdp"):
+    print(1)
+    host, path, username, password = config()
+    print(2)
+    return templates.TemplateResponse("index.j2", context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
+
+@app.get('/download/graph')
+def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
+    # from aig_accounts import download_accounts
+    from aig_accounts import accounts
+    host, path, username, password = config()
+    # circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
+                                    "aig?retryWrites=true&w=majority")) as client:
+        output = sister("aig.svg")
+        accounts.relation_graph(client.aig, output, root, depth, layout)
+    return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
+
+
+
+
+
+
+"""
+@app.get('/draw')
+def index(request: Request, root: str = "admin@aigia.co.jp", layout: str = "fdp",Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    host, path, username, password = config()
+    return templates.TemplateResponse("index.j2",  context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
+
+
+@app.get('/download/graph')
+def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: int = 4):
+    # from aig_accounts import download_accounts
+    from aig_accounts import accounts
+    host, path, username, password = config()
+    # circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
+                                    "aig?retryWrites=true&w=majority")) as client:
+        output = sister("aig.svg")
+        accounts.relation_graph(client.aig, output, root, depth, layout)
+    return FileResponse(path=output, media_type='image/svg+xml', filename="aig.svg")
+
+
+
+
+"""
+
 
 
 
