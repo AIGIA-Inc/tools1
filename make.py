@@ -37,6 +37,8 @@ if __name__ == "__main__":
                                      "/product/data"
                                      ])))
     pprint.pprint(list(map(build_file, ["/main.py",
+                                        "/auth.py",
+                                        "/models.py",
                                         "/setup.py",
                                         "/mongocopy.py",
                                         "/requirements.txt",
@@ -45,11 +47,7 @@ if __name__ == "__main__":
                                         "/data/upload.csv",
                                 "/aig_accounts/__init__.py",
                                 "/aig_accounts/accounts.py",
-                                "/aig_accounts/payment.py",
-                                "/templates/auth.j2",
                                 "/templates/base.j2",
                                 "/templates/error.j2",
                                 "/templates/index.j2",
-                                "/templates/test.j2",
-                                "/templates/studios.j2",
                                 ])))
