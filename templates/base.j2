@@ -206,9 +206,8 @@
                             localStorage.setItem('access_token', this.access_token);
                             localStorage.setItem('refresh_token', this.refresh_token);
                             if (callback) {
-                                callback()
-                            }
-                            ;
+                                callback();
+                            };
                         } else {
                             this.access_token = "";
                             localStorage.setItem('access_token', "");

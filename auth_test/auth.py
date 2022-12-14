@@ -32,8 +32,8 @@ def create_tokens(user_id: int):
     }
 
     # トークン作成（本来は'SECRET_KEY123'はもっと複雑にする）
-    access_token = jwt.encode(access_payload, 'SECRET_KEY123', algorithm='HS256')
-    refresh_token = jwt.encode(refresh_payload, 'SECRET_KEY123', algorithm='HS256')
+    access_token = jwt.encode(access_payload, 'ima15ji07fun', algorithm='HS256')
+    refresh_token = jwt.encode(refresh_payload, 'ima15ji07fun', algorithm='HS256')
 
     # DBにリフレッシュトークンを保存
     User.update(refresh_token=refresh_token).where(User.id == user_id).execute()
@@ -44,7 +44,7 @@ def create_tokens(user_id: int):
 def get_current_user_from_token(token: str, token_type: str):
     """tokenからユーザーを取得"""
     # トークンをデコードしてペイロードを取得。有効期限と署名は自動で検証される。
-    payload = jwt.decode(token, 'SECRET_KEY123', algorithms=['HS256'])
+    payload = jwt.decode(token, 'ima15ji07fun', algorithms=['HS256'])
 
     # トークンタイプが一致することを確認
     if payload['token_type'] != token_type:
