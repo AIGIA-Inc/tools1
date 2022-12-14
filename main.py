@@ -26,9 +26,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 PATH_ROOT = str(pathlib.Path(__file__).resolve().parent)
+
 #デプロイ時　parent.parent→　parent　要修正
-PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent.parent / "templates")
-PATH_UPLOAD = str(pathlib.Path(__file__).resolve().parent.parent / "data") + "/upload.csv"
+
+PATH_TEMPLATES = str(pathlib.Path(__file__).resolve().parent / "templates")
+PATH_UPLOAD = str(pathlib.Path(__file__).resolve().parent / "data") + "/upload.csv"
 
 app.mount("/data", StaticFiles(directory="data"), name="data")
 templates = Jinja2Templates(directory=PATH_TEMPLATES)
