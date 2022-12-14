@@ -270,10 +270,8 @@ def upload_file(upload_file: UploadFile = File(...)):
 
 
 @app.get('/draw')
-def index(request: Request, root: str = "admin@aigia.co.jp", layout: str = "fdp"):
-    print(1)
+def index(request: Request, root: str = "egai-ikebukuro@earth-academy.co.jp", layout: str = "fdp"):
     host, path, username, password = config()
-    print(2)
     return templates.TemplateResponse("index.j2", context={"request": request, "host": host, "path": path, "rootuser": root, "layout": layout})
 
 @app.get('/download/graph')

@@ -120,7 +120,6 @@
                 </div>
             </div>
             <div v-if="access_token" class="row" style="margin:20px;padding:20px">
-                <div class="col-1"></div>
                 <div class="col">
                     <table class="table">
                         <thead>
@@ -133,7 +132,8 @@
                         </thead>
                         <tbody>
                         <tr v-for="studio in items">
-                            <td>[[studio.name]]</td>
+                            <td><a v-bind:href="'{{ path }}/draw?layout=fdp&root=' + studio.name">[[studio.name]]</a>
+                            </td>
                             <td>[[studio.nickname]]</td>
                             <td v-if="file_exist == 1">[[studio.valid_count]]</td>
                             <td v-else>-</td>
@@ -142,13 +142,14 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="col-1">
+                <div class="col">
+                    {% block body %}
+                    {% endblock %}
                 </div>
             </div>
         </div>
     </div>
-    {% block body %}
-    {% endblock %}
+
 </div>
 {% block trailing %}
 {% endblock %}
@@ -207,7 +208,8 @@
                             localStorage.setItem('refresh_token', this.refresh_token);
                             if (callback) {
                                 callback();
-                            };
+                            }
+                            ;
                         } else {
                             this.access_token = "";
                             localStorage.setItem('access_token', "");
