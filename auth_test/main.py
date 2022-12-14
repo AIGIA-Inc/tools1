@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import shutil
 
-from fastapi import Depends, FastAPI,Request
+from fastapi import FastAPI,Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
