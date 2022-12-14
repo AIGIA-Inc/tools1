@@ -25,7 +25,6 @@
             <button type="button" class="btn btn-primary" v-on:click="get">get</button>
             <button type="button" class="btn btn-primary" v-on:click="check">check</button>
             <button type="button" class="btn btn-primary" v-on:click="refresh">refresh</button>
-            <!-- <button type="button" class="btn btn-primary" v-on:click="display">display</button> -->
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +65,7 @@
 							<li><a class="dropdown-item" href="{{path}}/download/graph?root={{rootuser}}">graph</a></li>
                             <li><a class="dropdown-item" href="{{path}}/download/shots">shots</a></li>
 						</ul>
-					</li>  -->
+					</li>
 
                     <li class="nav-item dropdown" v-if="access_token !== ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink1" role="button"
@@ -81,7 +80,7 @@
                             <li><a class="dropdown-item" href="{{ path }}/draw?layout=sfdp">sfdp</a></li>
                             <li><a class="dropdown-item" href="{{ path }}/draw?layout=twopi">twopi</a></li>
                         </ul>
-                    </li>
+                    </li>-->
                     <li>
                         <button type="button" class="btn btn-primary" v-on:click="logout">Logout</button>
                     </li>
@@ -124,10 +123,10 @@
                     <table class="table">
                         <thead>
                         <tr>
-                            <th v-on:click="name('name')" scope="col" style="cursor: pointer">↕メールアドレス</th>
-                            <th v-on:click="name('nickname')" scope="col" style="cursor: pointer">↕スタジオ名</th>
-                            <th v-on:click="name('valid_count')" scope="col" style="cursor: pointer">↕支払い</th>
-                            <th v-on:click="name('all_count')" scope="col" style="cursor: pointer">↕トータル</th>
+                            <th v-on:click="name('name')" scope="col" style="cursor: pointer">↕mailaddress</th>
+                            <th v-on:click="name('nickname')" scope="col" style="cursor: pointer">↕studio</th>
+                            <th v-on:click="name('valid_count')" scope="col" style="cursor: pointer">↕payed</th>
+                            <th v-on:click="name('all_count')" scope="col" style="cursor: pointer">↕total</th>
                         </tr>
                         </thead>
                         <tbody>
