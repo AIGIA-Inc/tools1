@@ -223,6 +223,7 @@
             logout: function () {
                 this.access_token = "";
                 localStorage.removeItem("access_token");
+                window.location.href = '/';
             },
             upload: function () {
                 axios.post('/upload')
