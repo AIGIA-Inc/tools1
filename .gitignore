@@ -11,3 +11,4 @@ aig.svg
 papi.py
 *.csv
 .html
+db.sqlite3

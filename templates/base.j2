@@ -22,9 +22,10 @@
             <a class="navbar-brand">AIG Report</a>
 
 
-            <button type="button" class="btn btn-primary" v-on:click="get">get</button>
-            <button type="button" class="btn btn-primary" v-on:click="check">check</button>
-            <button type="button" class="btn btn-primary" v-on:click="refresh">refresh</button>
+            <!--<button type="button" class="btn btn-primary" v-on:click="get">get</button>-->
+            <!--<button type="button" class="btn btn-primary" v-on:click="check">check</button>-->
+            <!--<button type="button" class="btn btn-primary" v-on:click="topscreen">admin@aigia.co.jp</button>-->
+            <!--<button type="button" class="btn btn-primary" v-on:click="refresh">refresh</button>-->
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -232,6 +233,9 @@
                     }).catch((e) => {
 
                 })
+            },
+            topscreen: function () {
+                window.location.href = '/';
             },
             check: function () {
                 axios.get('/file_exist')

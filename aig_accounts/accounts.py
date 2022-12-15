@@ -390,7 +390,7 @@ def relation_graph(aig, output, rootuser, maxDepth, engine):
 							color, shape, fontsize = color_and_shape(relation['user_type'])
 
 						graph.node(to_user_name, shape=shape, fontsize=fontsize, style="filled", color=color)
-						graph.edge(to_user_name, from_user_name, fontsize="8", label=type)
+						graph.edge(to_user_name, from_user_name, fontsize="8", label="")
 
 					graph.render("aig")
 					shutil.move('aig.svg', output)

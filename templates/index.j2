@@ -1,14 +1,6 @@
 {% extends "base.j2" %}
 {% block body %}
-	<div class="row" style="margin:20px;padding:20px">
-		<div class="col-1">
-		</div>
-		<div class="col">
-			<img src="{{path}}/download/graph?layout={{layout}}&root={{rootuser}}" class="img-fluid"/>
-		</div>
-		<div class="col-1">
-		</div>
-	</div>
+    <img src="{{path}}/download/graph?layout={{layout}}&root={{rootuser}}"  class="img-fluid"/>
 {% endblock %}
 {% block trailing %}
 {% endblock %}

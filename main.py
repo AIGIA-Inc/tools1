@@ -129,6 +129,42 @@ def studio_users(client,item_id):
 def sister(name):
     return os.path.expanduser(os.path.join(PATH_ROOT, name))
 
+
+KB = 1024
+MB = 1024 * KB
+
+@app.post("/upload")
+def upload_file(upload_file: UploadFile = File(...)):
+    # ファイルサイズ検証
+    upload_file.file.seek(0, 2)  # シークしてサイズ検証
+    file_size = upload_file.file.tell()
+    if file_size > 20 * MB:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="アップロードファイルは20MB制限です",
+        )
+    else:
+        upload_file.file.seek(0)  # シークを戻す
+
+    tmp_path: Path = ""
+    try:
+        suffix = Path(upload_file.filename).suffix
+        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(upload_file.file, tmp)
+            tmp_path = Path(tmp.name)
+            print(tmp_path)
+    except Exception as e:
+        print(f"一時ファイル作成: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="一時ファイル作成できません",
+        )
+    finally:
+        upload_file.file.close()
+    shutil.move(tmp_path, PATH_UPLOAD)
+    result = {"code": 0,"message": "logout success."}
+    return result
+
 @app.post("/token", response_model=Token)
 async def login(form: OAuth2PasswordRequestForm = Depends()):
     """トークン発行"""
@@ -208,42 +244,6 @@ async def read_users_me(sort_field, sort_order_param, current_user: User = Depen
     except Exception as e:
         error(e.message)
 
-
-
-KB = 1024
-MB = 1024 * KB
-
-@app.post("/upload")
-def upload_file(upload_file: UploadFile = File(...)):
-    # ファイルサイズ検証
-    upload_file.file.seek(0, 2)  # シークしてサイズ検証
-    file_size = upload_file.file.tell()
-    if file_size > 20 * MB:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="アップロードファイルは20MB制限です",
-        )
-    else:
-        upload_file.file.seek(0)  # シークを戻す
-
-    tmp_path: Path = ""
-    try:
-        suffix = Path(upload_file.filename).suffix
-        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(upload_file.file, tmp)
-            tmp_path = Path(tmp.name)
-            print(tmp_path)
-    except Exception as e:
-        print(f"一時ファイル作成: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="一時ファイル作成できません",
-        )
-    finally:
-        upload_file.file.close()
-    shutil.move(tmp_path, PATH_UPLOAD)
-    result = {"code": 0,"message": "logout success."}
-    return result
 
 @app.get('/draw')
 def index(request: Request, root: str = "egai-ikebukuro@earth-academy.co.jp", layout: str = "fdp"):
