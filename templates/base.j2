@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vue-loaders@3.3.0/dist/vue-loaders.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue-loaders@3.3.0/dist/vue-loaders.umd.js"></script>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
@@ -92,7 +94,7 @@
             </li>
         </div>
     </nav>
-    <div class="container">
+    <div class="container" style="position: relative">
         <div class="row">
             <div v-if="!access_token" class="d-flex align-items-center">
                 <div>
@@ -119,6 +121,11 @@
                     </form>
                 </div>
             </div>
+
+            <div v-show="loading" class="loader" style="position: absolute;  top: 250px;left: 50%;">
+                <vue-loaders name="pacman" color="red" scale="1"></vue-loaders>
+            </div>
+
             <div v-if="access_token" class="row" style="margin:20px;padding:20px">
                 <div class="col">
                     <table class="table">
@@ -132,7 +139,8 @@
                         </thead>
                         <tbody>
                         <tr v-for="studio in items">
-                            <td><a v-bind:href="'{{ path }}/draw?layout=fdp&root=' + studio.name">[[studio.name]]</a>
+                            <td>
+                                <a v-bind:href="'{{ path }}/draw?layout=fdp&root=' + studio.name">[[studio.name]]</a>
                             </td>
                             <td>[[studio.nickname]]</td>
                             <td v-if="file_exist == 1">[[studio.valid_count]]</td>
@@ -155,6 +163,10 @@
 {% endblock %}
 
 <script>
+
+    const VueLoaders = window['VueLoaders'];
+
+    Vue.use(VueLoaders);
     new Vue({
         el: "#app",
         delimiters: ["[[", "]]"],
@@ -167,11 +179,19 @@
                 access_token: "",
                 refresh_token: "",
                 sort_order: "True",
-                file_exist: 0
+                file_exist: 0,
+                loading: 0,
             }
         },
         methods: {
+            start_loading: function () {
+                this.loading++;
+            },
+            end_loading: function () {
+                this.loading--;
+            },
             login: function () {
+                this.start_loading();
                 axios.post('/token', {
                     username: this.username,
                     password: this.password
@@ -183,18 +203,22 @@
                             localStorage.setItem('access_token', this.access_token);
                             localStorage.setItem('refresh_token', this.refresh_token);
                             this.get();
+                            this.end_loading();
                         } else {
                             this.access_token = "";
                             localStorage.setItem('access_token', "");
                             this.message = response.data.message;
+                            this.end_loading();
                         }
                     }).catch((e) => {
                     console.log(e.message);
+                    this.end_loading();
                 })
             },
             refresh: function (callback) {
                 this.refresh_token = localStorage.getItem("refresh_token");
                 if (this.refresh_token) {
+                    this.start_loading();
                     axios.get('/refresh', {
                         headers: {
                             accept: "application/json",
@@ -209,14 +233,16 @@
                             if (callback) {
                                 callback();
                             }
-                            ;
+                            this.end_loading();
                         } else {
                             this.access_token = "";
                             localStorage.setItem('access_token', "");
                             this.message = response.data.message;
+                            this.end_loading();
                         }
                     }).catch((e) => {
                         console.log(e.message);
+                        this.end_loading();
                     })
                 }
             },
@@ -226,27 +252,31 @@
                 window.location.href = '/';
             },
             upload: function () {
+                this.start_loading();
                 axios.post('/upload')
                     .then((response) => {
                         if (response.data.code === 0) {
                         } else {
                         }
+                        this.end_loading();
                     }).catch((e) => {
-
+                    this.end_loading();
                 })
             },
             topscreen: function () {
                 window.location.href = '/';
             },
             check: function () {
+                this.start_loading();
                 axios.get('/file_exist')
                     .then((response) => {
                         if (response.data.code === 1) {
                             this.file_exist = 1;
                             this.get();
                         }
+                        this.end_loading();
                     }).catch((e) => {
-
+                    this.end_loading();
                 })
             },
             get: function () {
@@ -257,6 +287,7 @@
             },
             name: async function (field_name) {
                 this.refresh(() => {
+                    this.start_loading();
                     axios.get('/api/studios/' + field_name + '/' + this.sort_order, {
                         headers: {
                             accept: "application/json",
@@ -270,7 +301,9 @@
                                 this.sort_order = "True"
                             }
                             this.items = response.data.studios;
+                            this.end_loading();
                         }).catch((e) => {
+                        this.end_loading();
                     });
                 });
             },
@@ -282,3 +315,5 @@
 </script>
 </body>
 </html>
+
+
