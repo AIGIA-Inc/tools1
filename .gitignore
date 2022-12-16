@@ -10,5 +10,7 @@ aig.svg
 .vscode/sftp.json
 papi.py
 *.csv
-.html
+*.html
 db.sqlite3
+.sqlite3
+.sqlite
