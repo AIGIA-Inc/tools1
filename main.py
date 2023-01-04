@@ -162,7 +162,7 @@ def upload_file(upload_file: UploadFile = File(...)):
     finally:
         upload_file.file.close()
     shutil.move(tmp_path, PATH_UPLOAD)
-    result = {"code": 0,"message": "logout success."}
+    result = {"code": 0,"message": "upload success."}
     return result
 
 @app.post("/token", response_model=Token)
@@ -205,7 +205,7 @@ async def read_users_me(sort_field, sort_order_param, current_user: User = Depen
     try:
         host, path, username, password = config()
         usernames = stripe_data("data/upload.csv")
-        with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
+        with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.co9ud.mongodb.net", "aig?retryWrites=true&w=majority")) as client:
             if client:
                 aig = client.aig
                 if aig:
@@ -256,7 +256,7 @@ def download_graph(root: str = "admin@aigia.co.jp", layout: str = 'dot', depth: 
     from aig_accounts import accounts
     host, path, username, password = config()
     # circo, dot, fdp, neato, nop, nop1, nop2, osage, patchwork, sfdp, twopi
-    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.od1kc.mongodb.net",
+    with MongoClient(connect_string("mongodb+srv", username, password, "cluster0.co9ud.mongodb.net",
                                     "aig?retryWrites=true&w=majority")) as client:
         output = sister("aig.svg")
         accounts.relation_graph(client.aig, output, root, depth, layout)
